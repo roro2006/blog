@@ -265,6 +265,7 @@ def parse(path):
 def page(title, body, depth=0, description=""):
     up = "../" * depth
     desc = html.escape(description or SITE["tagline"])
+    footer_creature = "root-crawler" if depth else "tangle-guardian"
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -283,7 +284,10 @@ def page(title, body, depth=0, description=""):
 <main>
 {body}
 </main>
-<footer class="site">{SITE["author"]} · <a href="{SITE["github"]}">github.com/roro2006</a></footer>
+<footer class="site">
+  <span>{SITE["author"]} · <a href="{SITE["github"]}">github.com/roro2006</a></span>
+  <img class="brood" src="{up}{footer_creature}.png" width="78" height="66" alt="">
+</footer>
 </body>
 </html>
 """
@@ -306,8 +310,9 @@ def build():
         else:
             shutil.rmtree(f, ignore_errors=True)
     (OUT / "posts").mkdir(exist_ok=True)
-    shutil.copy(STATIC / "style.css", OUT / "style.css")
-    shutil.copy(STATIC / "mirrodin-tangle.png", OUT / "mirrodin-tangle.png")
+    for asset in ("style.css", "mirrodin-tangle.png", "maze-stalker.png",
+                  "tangle-guardian.png", "root-crawler.png"):
+        shutil.copy(STATIC / asset, OUT / asset)
     (OUT / ".nojekyll").write_text("")
 
     posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)
@@ -342,6 +347,7 @@ def build():
     filters = '<button class="on" data-tag="" onclick="filterPosts(this)">all</button>' + "".join(
         f'<button data-tag="{t}" onclick="filterPosts(this)">{t}</button>' for t in all_tags)
     index = f"""<section class="intro">
+<img class="brood" src="maze-stalker.png" width="104" height="88" alt="">
 <h1>{SITE["tagline"]}</h1>
 <p>Essays on how models get served, how agents get built, and how anyone knows the output is right. Each one cites its sources, and the numbers come from the papers.</p>
 </section>

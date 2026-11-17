@@ -46,6 +46,7 @@ header.site nav a { color: var(--muted); text-decoration: none; }
 header.site nav a:hover { color: var(--fg); }
 main { padding-top: 40px; padding-bottom: 64px; }
 footer.site {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding-top: 20px; padding-bottom: 40px; border-top: 1px solid var(--rule);
   color: var(--muted); font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -161,14 +162,19 @@ figure.diagram .src, figure.video .src { display: block; margin-top: 4px; font-s
   figure.diagram figcaption { position: sticky; left: 0; max-width: calc(100vw - 66px); }
 }
 
-/* The Tangle: copper trunks, verdigris foliage, and a dark forest floor. */
+/* The Tangle: twisted metal, trailing vines, and amber haze. */
 .treeline {
-  height: clamp(92px, 15vw, 170px);
-  background: #12170d url("mirrodin-tangle.png") repeat-x center bottom / auto 100%;
+  height: clamp(112px, 19vw, 210px);
+  background: #443f29 url("mirrodin-tangle.png") repeat-x center bottom / auto 100%;
   image-rendering: pixelated;
   border-bottom: 2px solid var(--copper);
 }
-.intro { border-left: 3px solid var(--copper); padding-left: 14px; }
+.brood { display: block; flex: none; image-rendering: pixelated; }
+.intro .brood { float: right; margin: 0 0 8px 12px; }
+.intro { display: flow-root; border-left: 3px solid var(--copper); padding-left: 14px; }
+@media (max-width: 520px) {
+  .intro .brood { width: 65px; height: 55px; }
+}
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 a:hover { text-decoration-color: var(--accent); }
