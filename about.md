@@ -6,4 +6,4 @@ Outside of work, I’m an avid TCG player, especially of *Magic: The Gathering* 
 
 Code is on [GitHub](https://github.com/roro2006).
 
-The New Phyrexia theme is unofficial fan content under [Wizards’ Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy). Wizards has neither approved nor endorsed it. *Forest* is illustrated by Mark Tedin. © Wizards of the Coast LLC.
+The New Phyrexia theme is unofficial fan content under [Wizards’ Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy). Wizards has neither approved nor endorsed it.

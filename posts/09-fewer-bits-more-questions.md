@@ -12,7 +12,7 @@ Quantization is attractive for a simple reason. A weight stored in 16 bits takes
 
 Weight-only methods make a different trade. [Frantar et al., 2022](https://arxiv.org/abs/2210.17323) describe GPTQ as a post-training method that rounds the weights one layer at a time and adjusts the rest of the layer to absorb each rounding error. They report that a 175-billion-parameter model can be quantized in "approximately four GPU hours," with end-to-end speedups over FP16 of "around 3.25x" on an A100 and "4.5x" on an A6000. Same method, same model, two GPUs, and the speedup moves by about a third. I read that as a warning. A speedup belongs to a stack of format, kernels and card, and a single number in an abstract hides the stack. [Lin et al., 2023](https://arxiv.org/abs/2306.00978) argue that "protecting only 1% salient weights can greatly reduce quantization error," and their TinyChat runtime is reported at "more than 3x speedup over the Huggingface FP16 implementation." That baseline tells you how much faster this runtime is than one particular FP16 implementation. It says little about how close either one is to what the hardware allows. [Xiao et al., 2022](https://arxiv.org/abs/2211.10438) report "up to 1.56x speedup and 2x memory reduction" with "negligible loss in accuracy." Both hedges matter. "Up to" marks the best case, and "negligible" is judged on the accuracy benchmarks the authors chose.
 
-The bars below come from different methods, models and GPUs, so read them with the note underneath.
+The figures below come from different methods, models and GPUs, so read them with the note underneath.
 
 ```chart
 title: Reported speedups over FP16 (quantized inference)

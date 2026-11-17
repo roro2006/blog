@@ -91,14 +91,12 @@ article h1 { font-size: 2rem; line-height: 1.2; margin: 8px 0 12px; font-weight:
 .prose h2 + ol, .prose h2 + ul { font-size: 15px; line-height: 1.55; color: var(--muted); }
 .prose h2 + ol a, .prose h2 + ul a { word-break: break-word; }
 
-figure.chart { margin: 1.8em 0; padding: 16px 16px 12px; border: 1px solid var(--rule); border-radius: 8px; }
-figure.chart svg { width: 100%; height: auto; display: block; }
-figure.chart .cl { font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--fg); }
-figure.chart .cv { font: 600 13px ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--muted); }
-figure.chart .cb { fill: var(--accent); opacity: .85; }
-figure.chart figcaption { margin-top: 10px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--muted); }
-figure.chart figcaption strong { color: var(--fg); font-weight: 600; }
-figure.chart .src { display: block; margin-top: 4px; font-size: 12.5px; }
+.data-table { width: 100%; margin: 1.5em 0 .5em; border-collapse: collapse; }
+.data-table caption { text-align: left; font-weight: 700; margin-bottom: .4em; }
+.data-table th, .data-table td { padding: .35em .5em; border-top: 1px solid var(--rule); }
+.data-table th { text-align: left; font-weight: 400; }
+.data-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.prose .media-note { color: var(--muted); font-size: .9em; }
 
 .pager {
   display: flex; justify-content: space-between; gap: 24px; margin-top: 48px; padding-top: 20px;
@@ -113,75 +111,6 @@ figure.chart .src { display: block; margin-top: 4px; font-size: 12.5px; }
   .posts p { margin-left: 0; }
 }
 .kind { text-transform: capitalize; color: var(--fg); }
-figure.chart .cb.neg { fill: var(--bad); }
-figure.chart .axis { stroke: var(--muted); stroke-width: 1; }
-
-/* diagrams */
-:root { --box: #f9fbf6; --box-hi: #dcebdd; --good: #3f7a3a; --bad: #a8642a; }
-@media (prefers-color-scheme: dark) { :root { --box: #23302a; --box-hi: #2d463a; --good: #a9d08f; --bad: #e2ab6c; } }
-figure.diagram, figure.video { margin: 1.8em 0; }
-figure.diagram { padding: 16px 16px 12px; border: 1px solid var(--rule); border-radius: 8px; }
-figure.diagram svg { width: 100%; height: auto; display: block; overflow: visible; }
-figure.diagram figcaption, figure.video figcaption {
-  margin-top: 10px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--muted);
-}
-figure.diagram figcaption strong, figure.video figcaption strong { color: var(--fg); font-weight: 600; }
-figure.diagram .src, figure.video .src { display: block; margin-top: 4px; font-size: 12.5px; }
-.diagram .box { fill: var(--box); stroke: var(--muted); stroke-width: 1.2; }
-.diagram .box.hi { fill: var(--box-hi); stroke: var(--accent); }
-.diagram .box.good { stroke: var(--good); stroke-width: 1.6; }
-.diagram .box.bad { stroke: var(--bad); stroke-width: 1.6; stroke-dasharray: 5 4; }
-.diagram .lbl { font: 600 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--fg); }
-.diagram .sub { font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
-.diagram .num { font: 600 12px ui-monospace, "Cascadia Mono", Consolas, monospace; fill: var(--accent); }
-.diagram .edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
-.diagram .edge.good { stroke: var(--good); }
-.diagram .edge.bad { stroke: var(--bad); stroke-dasharray: 5 4; }
-.diagram .ah { fill: var(--muted); }
-.diagram .fill-good { fill: var(--good); } .diagram .fill-bad { fill: var(--bad); } .diagram .fill-accent { fill: var(--accent); }
-.diagram .dim { opacity: .45; }
-/* motion: "flow" edges stream, "pulse" blinks, "step1..step4" light up in sequence (a 4-beat loop) */
-.diagram .edge.flow { stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
-@keyframes flow { to { stroke-dashoffset: -24; } }
-.diagram .pulse { animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: .35; } }
-.diagram .step1, .diagram .step2, .diagram .step3, .diagram .step4 { animation: step 6s infinite; opacity: .25; }
-.diagram .step2 { animation-delay: 1.5s; } .diagram .step3 { animation-delay: 3s; } .diagram .step4 { animation-delay: 4.5s; }
-@keyframes step { 0%, 100% { opacity: .25; } 8%, 30% { opacity: 1; } 45% { opacity: .25; } }
-@media (prefers-reduced-motion: reduce) {
-  .diagram .edge.flow, .diagram .pulse, .diagram [class*="step"] { animation: none; opacity: 1; }
-}
-
-/* video */
-.vwrap { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; }
-.vwrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-@media (max-width: 600px) {
-  figure.diagram { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  figure.diagram svg { min-width: 520px; }
-  figure.diagram figcaption { position: sticky; left: 0; max-width: calc(100vw - 66px); }
-}
-
-/* The homepage shows the complete painting. Interior pages use a shallow crop. */
-.forest {
-  max-width: calc(var(--measure) - 32px);
-  margin: 0 auto;
-  width: calc(100% - 32px);
-  background: #22291a;
-  color: #ece9d6;
-  border: 1px solid var(--copper);
-  border-top: 0;
-}
-.forest img {
-  display: block; width: 100%; height: clamp(104px, 22vw, 150px);
-  object-fit: cover; object-position: center 45%;
-}
-.forest-full { background: radial-gradient(ellipse at center, #4f4a2e, #22291a 75%); }
-.forest-full img { width: min(100%, 402px); height: auto; margin: 0 auto; }
-.forest figcaption {
-  padding: 6px 12px; text-align: center;
-  font: 12px/1.5 system-ui, sans-serif;
-}
-.forest figcaption a { color: inherit; text-decoration-color: #d09955; }
 .intro { border-left: 3px solid var(--copper); padding-left: 14px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
@@ -190,5 +119,4 @@ a:hover { text-decoration-color: var(--accent); }
 .posts .num { color: var(--copper); }
 .filters button.on, .filters button:hover { color: var(--bg); background: var(--accent); border-color: var(--accent); }
 .prose blockquote { border-left-color: var(--moss); }
-figure.chart, figure.diagram { background: color-mix(in srgb, var(--box, #fff) 70%, transparent); }
 ::selection { background: color-mix(in srgb, var(--moss) 45%, transparent); }

@@ -59,7 +59,7 @@ def inline(text):
 
 
 def chart(block):
-    """Render a ```chart block as an inline horizontal bar chart (SVG).
+    """Render a ```chart block as a table of reported values.
 
     title: Chart title
     unit: x            (optional suffix for values)
@@ -86,42 +86,20 @@ def chart(block):
     unit = meta.get("unit", "")
     if unit[:1].isalpha() and len(unit) > 1:
         unit = " " + unit  # "5,272 recordings", but "2.5x" and "40%"
-    vmax = max(0, max(v for _, v in rows))
-    vmin = min(0, min(v for _, v in rows))
-    span = (vmax - vmin) or 1
-    label_w, bar_w, row_h, w = 230, 280, 34, 640
-    zero = label_w + bar_w * (-vmin) / span
-    h = row_h * len(rows) + 8
-    parts = []
-    for n, (label, v) in enumerate(rows):
-        y = n * row_h + 4
-        bw = max(2, bar_w * abs(v) / span)
-        x = zero if v >= 0 else zero - bw
-        shown = (f"{v:,.0f}" if v == int(v) and abs(v) >= 100 else f"{v:g}") + unit
-        if v > 0 and not vmin:
-            shown = shown
-        elif v > 0:
-            shown = "+" + shown
-        tx = zero + bw + 8 if v >= 0 else zero + 8
-        cls = "cb" if v >= 0 else "cb neg"
-        parts.append(
-            f'<text x="{label_w - 10}" y="{y + 20}" text-anchor="end" class="cl">{html.escape(label)}</text>'
-            f'<rect x="{x:.1f}" y="{y + 6}" width="{bw:.1f}" height="20" rx="3" class="{cls}"/>'
-            f'<text x="{tx:.1f}" y="{y + 20}" class="cv">{html.escape(shown)}</text>')
-    if vmin < 0:
-        parts.append(f'<line x1="{zero:.1f}" x2="{zero:.1f}" y1="2" y2="{h - 2}" class="axis"/>')
-    svg = (f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="{html.escape(meta.get("title", "chart"))}">'
-           + "".join(parts) + "</svg>")
-    cap = f'<figcaption><strong>{inline(meta.get("title", ""))}</strong>'
-    if meta.get("note"):
-        cap += f' {inline(meta["note"])}'
-    if meta.get("source"):
-        cap += f'<span class="src">Source: {inline(meta["source"])}</span>'
-    return f'<figure class="chart">{svg}{cap}</figcaption></figure>'
-
-
-ARROW_DEFS = ('<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
-              'orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>')
+    signed = any(value < 0 for _, value in rows)
+    entries = []
+    for label, value in rows:
+        number = f"{value:,.0f}" if value.is_integer() and abs(value) >= 100 else f"{value:g}"
+        if signed and value > 0:
+            number = "+" + number
+        entries.append(
+            f'<tr><th scope="row">{html.escape(label)}</th><td>{html.escape(number + unit)}</td></tr>')
+    caption = inline(meta.get("title", "Reported values"))
+    notes = " ".join(inline(meta[key]) if key == "note" else "Source: " + inline(meta[key])
+                     for key in ("note", "source") if meta.get(key))
+    note_html = f'<p class="media-note">{notes}</p>' if notes else ""
+    return (f'<table class="data-table"><caption>{caption}</caption><tbody>'
+            + "".join(entries) + "</tbody></table>" + note_html)
 
 
 def _meta_and_rest(block, stop):
@@ -136,43 +114,28 @@ def _meta_and_rest(block, stop):
     return meta, "\n".join(rest)
 
 
-def _caption(meta):
-    cap = ""
-    if meta.get("title"):
-        cap += f'<strong>{inline(meta["title"])}</strong> '
-    if meta.get("caption"):
-        cap += inline(meta["caption"])
-    if meta.get("source"):
-        cap += f'<span class="src">Source: {inline(meta["source"])}</span>'
-    return f"<figcaption>{cap}</figcaption>" if cap else ""
-
-
 def diagram(block):
-    """```diagram block: title/caption/source lines, then an inline <svg>.
-
-    Style hooks (see style.css): .box .box.hi .box.good .box.bad .lbl .sub .edge .edge.flow
-    .edge.bad .pulse .dim; marker-end="url(#arr)" draws an arrowhead.
-    """
-    meta, svg = _meta_and_rest(block, "<svg")
-    svg = re.sub(r"<script.*?</script>", "", svg, flags=re.S | re.I)
-    svg = re.sub(r"\son\w+=\"[^\"]*\"", "", svg)
-    svg = re.sub(r"<svg\b", '<svg role="img" aria-label="' + html.escape(meta.get("title", "diagram")) + '"', svg, count=1)
-    if "url(#arr)" in svg and "<defs>" not in svg:
-        svg = re.sub(r"(<svg[^>]*>)", r"\1" + ARROW_DEFS, svg, count=1)
-    return f'<figure class="diagram">{svg}{_caption(meta)}</figure>'
+    """Keep a diagram's caption and source as text."""
+    meta, _ = _meta_and_rest(block, "<svg")
+    parts = []
+    if meta.get("title"):
+        parts.append(f'<strong>{inline(meta["title"])}</strong>')
+    if meta.get("caption"):
+        parts.append(inline(meta["caption"]))
+    if meta.get("source"):
+        parts.append("Source: " + inline(meta["source"]))
+    return '<p class="media-note">' + " ".join(parts) + "</p>" if parts else ""
 
 
 def video(block):
-    """```video block: youtube: ID, title:, caption:"""
+    """Link to the video without loading an embedded thumbnail."""
     meta, _ = _meta_and_rest(block, "\x00")
     vid = meta.get("youtube", "")
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", vid):
         return ""
     title = html.escape(meta.get("title", "Video"))
-    frame = (f'<div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/{vid}" title="{title}" '
-             'loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" '
-             'allowfullscreen></iframe></div>')
-    return f'<figure class="video">{frame}{_caption(meta)}</figure>'
+    caption = f' {inline(meta["caption"])}' if meta.get("caption") else ""
+    return f'<p class="media-note"><a href="https://www.youtube.com/watch?v={vid}">{title}</a>{caption}</p>'
 
 
 def markdown(src):
@@ -262,10 +225,9 @@ def parse(path):
 
 # ---------- templates ----------
 
-def page(title, body, depth=0, description="", show_full_forest=False):
+def page(title, body, depth=0, description=""):
     up = "../" * depth
     desc = html.escape(description or SITE["tagline"])
-    forest_class = "forest forest-full" if show_full_forest else "forest"
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -273,17 +235,13 @@ def page(title, body, depth=0, description="", show_full_forest=False):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{desc}">
-<link rel="stylesheet" href="{up}style.css?v=tedin-forest">
+<link rel="stylesheet" href="{up}style.css?v=text-only">
 </head>
 <body>
 <header class="site">
   <a class="name" href="{up}index.html">{SITE["title"]}</a>
   <nav><a href="{up}index.html">Essays</a><a href="{up}about.html">About</a><a href="{SITE["github"]}">GitHub</a></nav>
 </header>
-<figure class="{forest_class}">
-  <img src="{up}forest-mark-tedin.png" width="402" height="360" alt="Gnarled metal trees rise through amber haze above a small fire.">
-  <figcaption><a href="https://mark-tedin-illustration.square.site/product/forest-7-epson-print/33?si=true"><cite>Forest</cite> by Mark Tedin</a> · New Phyrexia</figcaption>
-</figure>
 <main>
 {body}
 </main>
@@ -312,8 +270,7 @@ def build():
         else:
             shutil.rmtree(f, ignore_errors=True)
     (OUT / "posts").mkdir(exist_ok=True)
-    for asset in ("style.css", "forest-mark-tedin.png"):
-        shutil.copy(STATIC / asset, OUT / asset)
+    shutil.copy(STATIC / "style.css", OUT / "style.css")
     (OUT / ".nojekyll").write_text("")
 
     posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)
@@ -364,7 +321,7 @@ function filterPosts(b) {{
 }}
 </script>"""
     (OUT / "index.html").write_text(
-        page(SITE["title"], index, show_full_forest=True), encoding="utf-8")
+        page(SITE["title"], index), encoding="utf-8")
 
     about_src = (ROOT / "about.md").read_text(encoding="utf-8")
     about = f'<article><h1>About</h1><div class="prose">{markdown(about_src)}</div></article>'
