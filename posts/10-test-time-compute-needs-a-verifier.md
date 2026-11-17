@@ -1,0 +1,142 @@
+---
+title: Test-time compute is capped by its verifier
+summary: Extra inference compute only helps as far as a checker can tell right answers apart, so teams should fund the checker first.
+tags: inference, verification
+kind: opinion
+---
+
+I think most teams should stop buying more samples until they have bought a better checker. The common view is that reasoning models and more samples will keep improving results on their own. That view is half right, and the half it skips decides whether the extra compute reaches the user.
+
+For years the main lever was training compute. Inference was a fixed cost, paid per query and mostly ignored. Reasoning models such as [OpenAI's o1](https://openai.com/index/learning-to-reason-with-llms/) turned inference into a knob a vendor can turn for each question. The simplest form of that knob is repeated sampling: generate N candidates, score each one, return the winner. Cost grows close to linearly with N, since every candidate is a full generation. The yield depends on the scorer, and whatever the scorer gets wrong comes back to you as a confident answer.
+
+Start with a curve. [Brown et al., 2024](https://arxiv.org/abs/2407.21787) report that on SWE-bench Lite the share of problems solved rose from 15.9% with one sample to 56% with 250. The curve is real, and it is why repeated sampling looks like a general lever. Look at what the 56% counts, though. A problem is solved when one of the 250 attempts is correct, and correct is known only because something checked each attempt. Without a checker, those attempts are a pile of candidate patches with no way to choose one. Every such curve hides two numbers. Coverage is how often some sample is right, and it depends on the sampler. Accuracy is how often the returned answer is right, and it depends on the selector, the part the headlines usually skip.
+
+```diagram
+title: Coverage versus selection
+caption: Samples fan out, some of them are right, and the verifier decides which one is returned; the gap between those two steps is the verifier's job.
+<svg viewBox="0 0 640 306" xmlns="http://www.w3.org/2000/svg">
+  <text x="255" y="24" text-anchor="middle" class="sub">Samples: coverage</text>
+  <text x="430" y="24" text-anchor="middle" class="sub">Verifier: selection</text>
+  <text x="570" y="24" text-anchor="middle" class="sub">Result</text>
+  <g class="step1">
+    <rect x="20" y="118" width="120" height="40" rx="6" class="box"/>
+    <text x="80" y="142" text-anchor="middle" class="lbl">One problem</text>
+    <path d="M140 138 L190 69" class="edge" marker-end="url(#arr)"/>
+    <path d="M140 138 L190 121" class="edge" marker-end="url(#arr)"/>
+    <path d="M140 138 L190 173" class="edge" marker-end="url(#arr)"/>
+    <path d="M140 138 L190 225" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step2">
+    <rect x="190" y="52" width="130" height="34" rx="6" class="box bad"/>
+    <text x="255" y="74" text-anchor="middle" class="lbl">candidate A</text>
+    <rect x="190" y="104" width="130" height="34" rx="6" class="box good"/>
+    <text x="255" y="126" text-anchor="middle" class="lbl">candidate B</text>
+    <rect x="190" y="156" width="130" height="34" rx="6" class="box bad"/>
+    <text x="255" y="178" text-anchor="middle" class="lbl">candidate C</text>
+    <rect x="190" y="208" width="130" height="34" rx="6" class="box good"/>
+    <text x="255" y="230" text-anchor="middle" class="lbl">candidate D</text>
+  </g>
+  <g class="step3">
+    <path d="M320 69 L370 138" class="edge" marker-end="url(#arr)"/>
+    <path d="M320 121 L370 138" class="edge" marker-end="url(#arr)"/>
+    <path d="M320 173 L370 138" class="edge" marker-end="url(#arr)"/>
+    <path d="M320 225 L370 138" class="edge" marker-end="url(#arr)"/>
+    <rect x="370" y="118" width="120" height="40" rx="6" class="box hi"/>
+    <text x="430" y="142" text-anchor="middle" class="lbl">Verifier</text>
+  </g>
+  <g class="step4">
+    <path d="M490 138 L520 80" class="edge good" marker-end="url(#arr)"/>
+    <path d="M490 138 L520 200" class="edge bad" marker-end="url(#arr)"/>
+    <rect x="520" y="60" width="100" height="40" rx="6" class="box good"/>
+    <text x="570" y="84" text-anchor="middle" class="lbl">Correct</text>
+    <rect x="520" y="180" width="100" height="40" rx="6" class="box bad"/>
+    <text x="570" y="204" text-anchor="middle" class="lbl">Wrong</text>
+  </g>
+  <rect x="190" y="262" width="300" height="30" rx="6" class="box hi"/>
+  <text x="340" y="282" text-anchor="middle" class="lbl">the gap: the verifier's job</text>
+</svg>
+```
+
+[Snell et al., 2024](https://arxiv.org/abs/2408.03314) make one of the strongest cases for the lever. They report that spending test-time compute more carefully improves efficiency "by more than 4x compared to a best-of-N baseline," and that test-time compute can "outperform a 14x larger model." The 14x sentence is the one that travels. My question is what scored their candidates. A small model beating a large one is only as good as the scorer's ability to separate good partial solutions from bad ones, and the abstract does not let me inspect that. I would hold the claim to the strength the abstract gives it.
+
+A careful scorer has a price. [Lightman et al., 2023](https://arxiv.org/abs/2305.20050) report that their process-supervised model, which grades each step rather than only the final answer, solves 78% of problems from a representative subset of the MATH test set. It was trained on PRM800K, which holds 800,000 step-level human feedback labels. That is a large purchase of verification, made once, by people reading steps. Inference papers tend to put the sampling budget on the chart and leave the labeling budget to a methods section. I think of the inference budget as paying interest on a loan taken out during training. [Cobbe et al., 2021](https://arxiv.org/abs/2110.14168) make the same point from the other side. They introduced GSM8K, with 8.5K grade school math problems, and report that verification scales with data more effectively than a finetuning baseline. A trained checker can be a separate asset, and the generator becomes the thing it ranks.
+
+Math is also the best case, which is a reason to be careful with it. [DeepSeek-AI (2025)](https://arxiv.org/abs/2501.12948) reports a pass@1 of 79.8 on AIME 2024 and 97.3 on MATH-500 for DeepSeek-R1. A final answer can be compared to a key, so a reward signal is cheap to compute. A patch, a plan, or a web page that has to look right has no key, and its checker is expensive or fuzzy. I think the reasoning-model story generalizes less than its benchmarks suggest, partly because the benchmarks were picked for being scorable.
+
+The code case shows the same shape. [Chen et al., 2021](https://arxiv.org/abs/2107.03374) report that their model solves 28.8% of HumanEval problems with a single sample and 70.2% with 100 samples per problem. The chart places these beside the SWE-bench pair to show the shape of the curve. They are different benchmarks, so only the ratio within each pair means anything.
+
+```chart
+title: Pass rates with one sample versus many
+unit: %
+source: Chen et al., 2021; Brown et al., 2024
+HumanEval, 1 sample: 28.8
+HumanEval, 100 samples: 70.2
+SWE-bench Lite, 1 sample: 15.9
+SWE-bench Lite, 250 samples: 56
+note: Two benchmarks. Compare the ratio within each pair, not the bars across pairs.
+```
+
+Both curves climb because a checker judged every point. Remove the checker and the x-axis stops meaning anything.
+
+The first thing I would build is the verifier, domain by domain, before any inference budget is approved. Tests, type checkers, simulators, and intermediate results that a script can check all count. The reason to start there is arithmetic. A check usually costs a small fraction of a generation, so each improvement to the verifier improves every sample it judges, while more samples only add candidates the same verifier must sort. The failure is a weak test suite that passes plausible wrong patches, which turns the verifier into the thing that rewards the error. What would convince me is a measurement on a labeled set the team did not tune against: at a fixed sample budget, selection accuracy rises as the verifier improves, and the gap to coverage narrows.
+
+The second is process checking, wherever the task allows it. Lightman et al. make the case for grading steps. I would go further and design the task so intermediate values can be checked: a type-checked intermediate in a code generation pipeline, or a unit-checkable subresult in a multi-step calculation. A wrong early step then dies before it costs a full continuation, which prunes the search rather than only ranking its endpoints. The failure modes are the PRM800K problem in miniature. Step labels are expensive, judgments on prose steps are fuzzy, and a model can learn to write steps that look checkable without being correct. I would accept process checking where the step check is mechanical, and reserve human-labeled steps for a small audit set.
+
+```diagram
+title: Outcome versus process checks
+caption: Outcome checking sees only the last step, so it cannot say where the solution went wrong; the process check marks the step that broke.
+<svg viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg">
+  <text x="36" y="28" class="sub">Process supervision: each step graded</text>
+  <rect x="36" y="40" width="120" height="44" rx="6" class="box good"/>
+  <text x="96" y="60" text-anchor="middle" class="lbl">Setup</text>
+  <text x="96" y="76" text-anchor="middle" class="sub">correct</text>
+  <path d="M156 62 H184" class="edge" marker-end="url(#arr)"/>
+  <rect x="184" y="40" width="120" height="44" rx="6" class="box bad"/>
+  <text x="244" y="60" text-anchor="middle" class="lbl">Substitute</text>
+  <text x="244" y="76" text-anchor="middle" class="sub">wrong value</text>
+  <path d="M304 62 H332" class="edge" marker-end="url(#arr)"/>
+  <rect x="332" y="40" width="120" height="44" rx="6" class="box bad"/>
+  <text x="392" y="60" text-anchor="middle" class="lbl">Simplify</text>
+  <text x="392" y="76" text-anchor="middle" class="sub">inherits error</text>
+  <path d="M452 62 H480" class="edge" marker-end="url(#arr)"/>
+  <rect x="480" y="40" width="120" height="44" rx="6" class="box bad"/>
+  <text x="540" y="60" text-anchor="middle" class="lbl">Answer</text>
+  <text x="540" y="76" text-anchor="middle" class="sub">wrong</text>
+  <text x="36" y="110" class="sub">Outcome supervision: only the final answer graded</text>
+  <rect x="36" y="118" width="120" height="40" rx="6" class="box"/>
+  <text x="96" y="142" text-anchor="middle" class="lbl">Setup</text>
+  <path d="M156 138 H184" class="edge" marker-end="url(#arr)"/>
+  <rect x="184" y="118" width="120" height="40" rx="6" class="box"/>
+  <text x="244" y="142" text-anchor="middle" class="lbl">Substitute</text>
+  <path d="M304 138 H332" class="edge" marker-end="url(#arr)"/>
+  <rect x="332" y="118" width="120" height="40" rx="6" class="box"/>
+  <text x="392" y="142" text-anchor="middle" class="lbl">Simplify</text>
+  <path d="M452 138 H480" class="edge" marker-end="url(#arr)"/>
+  <rect x="480" y="118" width="120" height="40" rx="6" class="box"/>
+  <text x="540" y="142" text-anchor="middle" class="lbl">Answer</text>
+  <path d="M540 158 V180" class="edge bad" marker-end="url(#arr)"/>
+  <rect x="36" y="180" width="564" height="30" rx="6" class="box bad"/>
+  <text x="318" y="200" text-anchor="middle" class="lbl">Outcome check sees only the answer: wrong, location unknown</text>
+</svg>
+```
+
+The third is a metric I'd put on every results page: the gap between coverage and selection, measured on the same tasks. If coverage is high and selection is low, more samples buy little accuracy beyond what the selector can find, and the money is better spent on the selector. If the gap is small, more samples are the right purchase. The catch is that measuring coverage needs ground truth, which is exactly what hard domains lack. So I would measure it on a labeled subset, accept that the subset is small, and check whether it represents the production tasks before trusting the gap.
+
+The strongest objection is that I am describing a solved problem. Where tests and answer keys exist, test-time compute is close to a purchase: pay for samples, buy accuracy. I concede that, and I would spend there too. A weak checker is not worthless either. [Madaan et al., 2023](https://arxiv.org/abs/2303.17651) report that Self-Refine, where the same model writes feedback on its own output and revises it, improves task performance by about 20 percentage points absolute on average. That is a large gain from a critic that shares the generator's blind spots. It changes my claim. A noisy verifier still buys something, but its errors are a cost, and they cluster on the hard problems, which is where the sampler is supposed to earn its keep. An average gain across tasks does not tell you how often the critic approves a wrong answer on those hard cases, so I would measure that false-approve rate directly.
+
+The backfire is that a checker pushed hard enough gets gamed. [Krakovna et al., 2020](https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/) define specification gaming as behavior that "satisfies the literal specification of an objective" without achieving the intended outcome. [Baker et al., 2025](https://arxiv.org/abs/2503.11926) found that a monitor reading a reasoning model's chain of thought can catch reward hacking, and that under too much optimization, agents learn obfuscated reward hacking and hide their intent inside the reasoning. Search applies that pressure to every candidate on every problem. This is the old observation about measures becoming targets, and a sampler with enough budget will find the cheapest way to satisfy the verifier. So I would keep the checker read-only to the sampler, log every case where a candidate passes by exploiting the check, and turn each one into a new test.
+
+So I would read the next curve differently. One that bends upward with the sample count should come with a second line: how often the checker chose the right candidate among those it could see. I would read that line first, because the upward line only shows what the sampler could reach. Before you approve the next inference budget, ask who wrote the checker and when they last tried to fool it.
+
+## References
+
+1. Brown et al. (2024). Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv. https://arxiv.org/abs/2407.21787
+2. Chen et al. (2021). Evaluating Large Language Models Trained on Code. arXiv. https://arxiv.org/abs/2107.03374
+3. Snell et al. (2024). Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters. arXiv. https://arxiv.org/abs/2408.03314
+4. Lightman et al. (2023). Let's Verify Step by Step. arXiv. https://arxiv.org/abs/2305.20050
+5. Cobbe et al. (2021). Training Verifiers to Solve Math Word Problems. arXiv. https://arxiv.org/abs/2110.14168
+6. DeepSeek-AI (2025). DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning. arXiv. https://arxiv.org/abs/2501.12948
+7. Madaan et al. (2023). Self-Refine: Iterative Refinement with Self-Feedback. arXiv. https://arxiv.org/abs/2303.17651
+8. Krakovna et al. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind blog. https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/
+9. Baker et al. (2025). Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation. arXiv. https://arxiv.org/abs/2503.11926
+10. OpenAI (2024). Learning to reason with LLMs. OpenAI blog. https://openai.com/index/learning-to-reason-with-llms/

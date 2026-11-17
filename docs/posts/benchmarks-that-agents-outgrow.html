@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build the benchmark you will be judged by · Inference &amp; Verification</title>
+<meta name="description" content="Public agent leaderboards saturate quickly, so teams should own private task suites and measure real uplift instead.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<svg class="treeline" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path class="far" d="M0 46V28L31 8L62 30L96 5L129 30L152 21L175 30L199 15L223 30L262 5L302 30L339 10L376 30L398 6L420 30L454 17L489 30L512 11L535 30L558 21L582 30L616 5L651 30L690 7L729 30L757 22L785 30L808 22L830 30L870 16L909 30L932 11L954 30L976 21L998 30L1023 13L1048 30L1082 8L1116 30L1154 7L1192 30L1231 13L1270 30L1200 42V46z"/><path class="near" d="M0 46V32L8 36L6 36L17 24L28 36L26 36L34 42L42 38L40 38L51 26L62 38L60 38L68 42L78 28L75 28L87 16L99 28L96 28L106 42L112 38L110 38L118 26L126 38L125 38L131 42L140 27L137 27L148 15L160 27L157 27L166 42L172 36L170 36L178 24L185 36L183 36L189 42L196 26L194 26L204 14L213 26L211 26L218 42L224 23L222 23L229 11L236 23L234 23L240 42L250 34L247 34L260 22L272 34L269 34L279 42L288 27L285 27L296 15L307 27L304 27L313 42L323 22L320 22L332 10L345 22L342 22L352 42L361 24L358 24L370 12L382 24L379 24L388 42L393 23L392 23L398 11L405 23L404 23L409 42L416 29L414 29L422 17L430 29L428 29L435 42L445 22L442 22L454 10L467 22L464 22L474 42L482 32L480 32L491 20L502 32L500 32L508 42L516 28L514 28L525 16L536 28L534 28L542 42L551 29L548 29L560 17L572 29L569 29L578 42L588 31L585 31L598 19L611 31L608 31L618 42L627 22L624 22L636 10L647 22L644 22L653 42L658 36L657 36L664 24L671 36L670 36L675 42L685 30L682 30L695 18L708 30L705 30L715 42L723 24L721 24L732 12L742 24L740 24L748 42L755 32L753 32L762 20L771 32L769 32L776 42L783 38L781 38L790 26L798 38L796 38L803 42L810 22L808 22L818 10L827 22L825 22L832 42L838 25L836 25L843 13L850 25L848 25L854 42L862 25L860 25L870 13L880 25L878 25L886 42L893 34L891 34L900 22L910 34L908 34L915 42L920 22L919 22L926 10L933 22L932 22L937 42L942 28L941 28L947 16L953 28L952 28L957 42L964 23L962 23L970 11L978 23L976 23L983 42L992 34L989 34L1000 22L1012 34L1009 34L1018 42L1026 35L1024 35L1034 23L1044 35L1042 35L1050 42L1056 28L1054 28L1061 16L1068 28L1066 28L1072 42L1079 32L1077 32L1086 20L1095 32L1093 32L1100 42L1106 31L1104 31L1111 19L1118 31L1116 31L1122 42L1130 22L1127 22L1137 10L1147 22L1144 22L1152 42L1160 25L1158 25L1168 13L1179 25L1177 25L1185 42L1191 29L1189 29L1197 17L1205 29L1203 29L1209 42L1200 42V46z"/></svg>
+<header class="site">
+  <a class="name" href="../index.html">Inference & Verification</a>
+  <nav><a href="../index.html">Essays</a><a href="../about.html">About</a><a href="https://github.com/roro2006">GitHub</a></nav>
+</header>
+<main>
+<article>
+<p class="meta">No. 11 · <span class="kind">opinion</span> · 10 min read · <span class="tag">agents</span><span class="tag">verification</span></p>
+<h1>Build the benchmark you will be judged by</h1>
+<p class="lede">Public agent leaderboards saturate quickly, so teams should own private task suites and measure real uplift instead.</p>
+<div class="prose">
+<p>The standard advice is to pick the model at the top of SWE-bench. I think that advice is wrong for most teams, and wrong in a predictable way. A public leaderboard measures someone else's tasks, run through someone else's harness, and its usefulness expires once the tasks stop separating models. A team should own the measure instead: a private suite built from its own work, refreshed often, and read beside a small study of what the tools do to its own speed.</p>
+<p>In 2023, <a href="https://arxiv.org/abs/2310.06770">Jimenez et al. (2024)</a> released SWE-bench: 2,294 software engineering problems drawn from real GitHub issues in 12 popular Python repositories. The best model in the paper, Claude 2, resolved 1.96% of them. Each task has a test that decides pass or fail, and the score is the share that pass. While the tasks are hard, that score separates models. Once models pass most of them, the remaining failures are often broken tests or ambiguous issues, and the score starts measuring the benchmark's defects. The <a href="https://swebench.com/verified.html">SWE-bench project page</a> describes the usual repair, a human-validated subset of 500 instances.</p>
+<p>The headline numbers show the drift. <a href="https://www.anthropic.com/news/claude-3-7-sonnet">Anthropic (2025)</a> reported 70.3% for Claude 3.7 Sonnet with a high-compute scaffold and 63.7% without one, on a 489-task subset rather than the full 500. The scaffold is worth 6.6 points (derived: 70.3 minus 63.7), which says as much about the harness as about the model. A leaderboard row names the model, but the score belongs to the model, the scaffold, the subset and the compute budget together.</p>
+<p>The budget matters more than most write-ups admit. <a href="https://arxiv.org/abs/2407.21787">Brown et al. (2024)</a> raised SWE-bench Lite from 15.9% with one sample to 56% with 250. Repeated sampling is a legitimate method, but a score that moves that far with the budget partly reports how many tries were paid for. A model that needs 250 attempts is a different product from one that succeeds on the first, even when a table puts them on the same row.</p>
+<p>A different measure changes the unit. <a href="https://arxiv.org/abs/2503.14499">Kwa et al. (2025)</a> ask how long a task a model can finish about half the time. They report that frontier time horizons have doubled about every seven months since 2019, and that Claude 3.7 Sonnet has a 50% time horizon of around 50 minutes. Seven months per doubling is roughly 3.3 times a year (derived: 2 to the power of 12/7). I find this more useful than a pass rate, because it asks how big a job an agent can take off a developer's hands. It is still a fit to a trend, and a smooth line over a few years can bend.</p>
+<p>The measure I care about most asks whether developers get faster. <a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/">METR (2025)</a> studied 16 experienced developers on 246 completed issues in large open-source repositories. With AI tools, the work took 19% longer. The developers had expected a 24% speedup, and afterward still believed AI had sped them up by 20%.</p>
+<figure class="chart"><svg viewBox="0 0 640 110" role="img" aria-label="Expected versus measured speedup, METR 2025 study"><text x="220" y="24" text-anchor="end" class="cl">Forecast before the study</text><rect x="353.7" y="10" width="156.3" height="20" rx="3" class="cb"/><text x="518.0" y="24" class="cv">+24%</text><text x="220" y="58" text-anchor="end" class="cl">Developers&#x27; belief after</text><rect x="353.7" y="44" width="130.2" height="20" rx="3" class="cb"/><text x="492.0" y="58" class="cv">+20%</text><text x="220" y="92" text-anchor="end" class="cl">Measured effect</text><rect x="230.0" y="78" width="123.7" height="20" rx="3" class="cb neg"/><text x="361.7" y="92" class="cv">-19%</text><line x1="353.7" x2="353.7" y1="2" y2="108" class="axis"/></svg><figcaption><strong>Expected versus measured speedup, METR 2025 study</strong> Positive means faster. Developers expected and afterwards believed AI made them faster; measured task time was 19% longer.<span class="src">Source: METR, 2025</span></figcaption></figure>
+<p><a href="https://metr.org/blog/2026-02-24-uplift-update/">METR's 2026 update</a> says the 2025 interval ran from 2% to 39% longer. Its later data, from 57 developers across 143 repositories and more than 800 tasks, estimates a speedup of minus 18%, with an interval from 38% slower to 9% faster. That interval includes zero, so even the direction is open. The 2025 figure was a snapshot of a moving target, and no leaderboard score would have predicted it.</p>
+<p>The first thing I would build is a private suite harvested from the team's own resolved issues. Those tasks carry the team's repositories, review standards and the mistakes its agents actually make, and a public set cannot. Add new issues every month, and the suite stays ahead of memorization, since each refresh contains tasks that postdate the models in use. The failure I expect is selection: teams tend to harvest tasks they already solve, which flatters the status quo. A few dozen tasks is also noisy, so two models a few points apart look identical. A second failure is more serious. If the agent can read the suite, it can game it. Krakovna et al. (2020) had collected around 60 examples of specification gaming by 2020, and METR found that o3 reward-hacked in every trajectory it generated on one RE-Bench task. The suite's test files should sit out of the agent's reach. What would convince me is a holdout check: keep the latest quarter's issues out, rank the candidate tools on the rest, and see whether that ranking predicts which patches a maintainer accepted on the held-out set.</p>
+<figure class="diagram"><svg role="img" aria-label="Private suite pipeline, rebuilt monthly" viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <text x="20" y="28" class="sub">Private suite, rebuilt every month</text>
+  <rect x="20" y="44" width="130" height="60" rx="6" class="box"/>
+  <text x="85" y="70" text-anchor="middle" class="lbl">Resolved issues</text>
+  <text x="85" y="88" text-anchor="middle" class="sub">from our own repo</text>
+  <path d="M152 74 H174" class="edge" marker-end="url(#arr)"/>
+  <rect x="176" y="44" width="130" height="60" rx="6" class="box"/>
+  <text x="241" y="70" text-anchor="middle" class="lbl">Strip the fix</text>
+  <text x="241" y="88" text-anchor="middle" class="sub">bug report kept</text>
+  <path d="M308 74 H330" class="edge" marker-end="url(#arr)"/>
+  <rect x="332" y="44" width="130" height="60" rx="6" class="box"/>
+  <text x="397" y="70" text-anchor="middle" class="lbl">Task and tests</text>
+  <text x="397" y="88" text-anchor="middle" class="sub">tests hidden</text>
+  <path d="M464 74 H486" class="edge" marker-end="url(#arr)"/>
+  <rect x="488" y="44" width="130" height="60" rx="6" class="box hi"/>
+  <text x="553" y="70" text-anchor="middle" class="lbl">Held-out check</text>
+  <text x="553" y="88" text-anchor="middle" class="sub">newest issues out</text>
+  <path d="M553 104 V140 H85 V105" class="edge" marker-end="url(#arr)"/>
+  <text x="319" y="158" text-anchor="middle" class="sub">each refresh adds the month's new issues</text>
+  <rect x="20" y="190" width="250" height="44" rx="6" class="box dim"/>
+  <text x="145" y="217" text-anchor="middle" class="lbl">Public leaderboard</text>
+  <text x="290" y="217" class="sub">kept as a sanity check, not a buying guide</text>
+</svg><figcaption><strong>Private suite pipeline, rebuilt monthly</strong> Resolved issues become held-out tasks with hidden tests, and the public leaderboard sits beside the pipeline as a sanity check.</figcaption></figure>
+<p>I would also report a time horizon on the team's own tasks, following Kwa et al. Estimate how long each task would take a competent developer, plot success against that length, and read off the length where the agent succeeds half the time. The mechanism is planning. A team can ask whether an agent can take an afternoon's ticket unsupervised, and a pass rate cannot answer that. Two models with similar pass rates can have very different horizons, and the horizon decides which tickets to hand over. The weak point is the estimate. Human guesses at task length are noisy, and a curve fitted to a handful of long tasks can mislead. I would report the sample budget beside every horizon, as Brown et al. do, because a horizon reached with 250 attempts is not the one reached with one. The result that would convince me is a crossing: if two models' curves cross inside the team's data, the ranking depends on task length, and a single pass rate hides exactly that.</p>
+<p>Before adopting a tool, a team should run a small randomized comparison on its own work. Assign issues at random to tool or no tool, and measure the time from issue to a patch a maintainer would accept, counting review and rework. METR measured task time directly, and the gap between developers' beliefs and the clock is the reason to do it. Teams that rely on impressions will overrate the tool, and I'd expect developers who feel faster to keep using it anyway. The obvious failures are sample size, since a team of eight produces few issues per arm, and contamination, since developers learn the tool across the study and reviewers may recognize which patches used it. I would blind reviewers where I can. What would convince me is a pre-registered comparison whose interval excludes zero. I'd want the interval, not the point estimate, because the METR figures show how far a point estimate can move.</p>
+<figure class="diagram"><svg role="img" aria-label="Randomized comparison on our own issues" viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <g class="step1">
+    <rect x="20" y="92" width="140" height="52" rx="6" class="box"/>
+    <text x="90" y="115" text-anchor="middle" class="lbl">Issue pool</text>
+    <text x="90" y="132" text-anchor="middle" class="sub">comparable issues</text>
+    <path d="M162 118 H196" class="edge flow" marker-end="url(#arr)"/>
+  </g>
+  <g class="step2">
+    <rect x="200" y="92" width="150" height="52" rx="6" class="box hi"/>
+    <text x="275" y="115" text-anchor="middle" class="lbl">Random assignment</text>
+    <text x="275" y="132" text-anchor="middle" class="sub">coin flip per issue</text>
+    <path d="M350 110 H375 V66 H396" class="edge" marker-end="url(#arr)"/>
+    <path d="M350 130 H375 V174 H396" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step3">
+    <rect x="400" y="40" width="220" height="52" rx="6" class="box"/>
+    <text x="510" y="63" text-anchor="middle" class="lbl">With the AI tool</text>
+    <text x="510" y="80" text-anchor="middle" class="sub">clock to accepted patch</text>
+    <rect x="400" y="148" width="220" height="52" rx="6" class="box"/>
+    <text x="510" y="171" text-anchor="middle" class="lbl">Without the tool</text>
+    <text x="510" y="188" text-anchor="middle" class="sub">clock to accepted patch</text>
+  </g>
+  <g class="step4">
+    <path d="M510 200 V218" class="edge" marker-end="url(#arr)"/>
+    <rect x="240" y="218" width="380" height="36" rx="6" class="box hi"/>
+    <text x="430" y="241" text-anchor="middle" class="lbl">Compare the interval, not the average</text>
+  </g>
+  <rect x="20" y="218" width="200" height="36" rx="6" class="box dim"/>
+  <text x="120" y="235" text-anchor="middle" class="lbl">Self-report: felt faster</text>
+  <text x="120" y="249" text-anchor="middle" class="sub">not evidence</text>
+</svg><figcaption><strong>Randomized comparison on our own issues</strong> Issues go to the tool or to no tool at random, the clock runs to an accepted patch, and a self-report is not evidence.</figcaption></figure>
+<p>The common view is right about something. Public benchmarks are cheap, shared, and the only yardstick that lets outsiders check a claim. A private suite can flatter a team's habits and becomes easy to tune to, which is the same failure any metric shows once it becomes a target. So I would keep one public benchmark as an anchor and read it as a sanity check, not as a basis for buying. When a private suite and the public number disagree sharply, the private suite is the first suspect, though sometimes the public one has simply gone stale. That concession changes the proposal. The private suite needs its own audit, which is why the holdout matters more than the suite's size.</p>
+<p>My table for a team wiki would have two columns. The public figure sits on the left, printed with its scaffold, subset and sample budget. The team's own figures sit on the right: held-out pass rate, time horizon, and minutes from issue to accepted patch. The gap between the columns is what to read. The 1.96% from 2023 is a reminder of how quickly the left column moves. A benchmark you do not own measures someone else's work.</p>
+<figure class="video"><div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/9QSm_mRGpN8" title="Measuring Exponential Trends Rising (in AI), Joel Becker of METR (Latent Space)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div><figcaption><strong>Measuring Exponential Trends Rising (in AI), Joel Becker of METR (Latent Space)</strong> METR on time horizons and measuring real uplift, the two measurements I would adopt for a private suite.</figcaption></figure>
+<h2>References</h2>
+<ol><li>Jimenez et al. (2024). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? ICLR 2024. <a href="https://arxiv.org/abs/2310.06770">https://arxiv.org/abs/2310.06770</a></li><li>SWE-bench team. SWE-bench Verified (project page). swebench.com. <a href="https://swebench.com/verified.html">https://swebench.com/verified.html</a></li><li>Anthropic (2025). Claude 3.7 Sonnet and Claude Code. Anthropic news. <a href="https://www.anthropic.com/news/claude-3-7-sonnet">https://www.anthropic.com/news/claude-3-7-sonnet</a></li><li>Brown et al. (2024). Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv. <a href="https://arxiv.org/abs/2407.21787">https://arxiv.org/abs/2407.21787</a></li><li>Kwa et al. (2025). Measuring AI Ability to Complete Long Software Tasks. arXiv. <a href="https://arxiv.org/abs/2503.14499">https://arxiv.org/abs/2503.14499</a></li><li>METR (2025). Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity. METR blog. <a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/">https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/</a></li><li>METR (2026). We are Changing our Developer Productivity Experiment Design (uplift update). METR blog. <a href="https://metr.org/blog/2026-02-24-uplift-update/">https://metr.org/blog/2026-02-24-uplift-update/</a></li><li>Krakovna et al. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind blog. <a href="https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/">https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/</a></li><li>METR (2025). Recent Frontier Models Are Reward Hacking. METR blog. <a href="https://metr.org/blog/2025-06-05-recent-reward-hacking/">https://metr.org/blog/2025-06-05-recent-reward-hacking/</a></li></ol>
+</div>
+</article>
+<nav class="pager"><a href="test-time-compute-needs-a-verifier.html">← Test-time compute is capped by its verifier</a><a href="reward-hacking-is-a-test-coverage-problem.html">Reward hacking is a bug report about your tests →</a></nav>
+</main>
+<footer class="site">Rohan Reddy · <a href="https://github.com/roro2006">github.com/roro2006</a></footer>
+</body>
+</html>

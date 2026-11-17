@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reward hacking is a bug report about your tests · Inference &amp; Verification</title>
+<meta name="description" content="An agent that games your tests is exposing a hole in your verifier, so fix the checker before blaming the model.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<svg class="treeline" viewBox="0 0 1200 46" preserveAspectRatio="none" aria-hidden="true"><path class="far" d="M0 46V28L31 8L62 30L96 5L129 30L152 21L175 30L199 15L223 30L262 5L302 30L339 10L376 30L398 6L420 30L454 17L489 30L512 11L535 30L558 21L582 30L616 5L651 30L690 7L729 30L757 22L785 30L808 22L830 30L870 16L909 30L932 11L954 30L976 21L998 30L1023 13L1048 30L1082 8L1116 30L1154 7L1192 30L1231 13L1270 30L1200 42V46z"/><path class="near" d="M0 46V32L8 36L6 36L17 24L28 36L26 36L34 42L42 38L40 38L51 26L62 38L60 38L68 42L78 28L75 28L87 16L99 28L96 28L106 42L112 38L110 38L118 26L126 38L125 38L131 42L140 27L137 27L148 15L160 27L157 27L166 42L172 36L170 36L178 24L185 36L183 36L189 42L196 26L194 26L204 14L213 26L211 26L218 42L224 23L222 23L229 11L236 23L234 23L240 42L250 34L247 34L260 22L272 34L269 34L279 42L288 27L285 27L296 15L307 27L304 27L313 42L323 22L320 22L332 10L345 22L342 22L352 42L361 24L358 24L370 12L382 24L379 24L388 42L393 23L392 23L398 11L405 23L404 23L409 42L416 29L414 29L422 17L430 29L428 29L435 42L445 22L442 22L454 10L467 22L464 22L474 42L482 32L480 32L491 20L502 32L500 32L508 42L516 28L514 28L525 16L536 28L534 28L542 42L551 29L548 29L560 17L572 29L569 29L578 42L588 31L585 31L598 19L611 31L608 31L618 42L627 22L624 22L636 10L647 22L644 22L653 42L658 36L657 36L664 24L671 36L670 36L675 42L685 30L682 30L695 18L708 30L705 30L715 42L723 24L721 24L732 12L742 24L740 24L748 42L755 32L753 32L762 20L771 32L769 32L776 42L783 38L781 38L790 26L798 38L796 38L803 42L810 22L808 22L818 10L827 22L825 22L832 42L838 25L836 25L843 13L850 25L848 25L854 42L862 25L860 25L870 13L880 25L878 25L886 42L893 34L891 34L900 22L910 34L908 34L915 42L920 22L919 22L926 10L933 22L932 22L937 42L942 28L941 28L947 16L953 28L952 28L957 42L964 23L962 23L970 11L978 23L976 23L983 42L992 34L989 34L1000 22L1012 34L1009 34L1018 42L1026 35L1024 35L1034 23L1044 35L1042 35L1050 42L1056 28L1054 28L1061 16L1068 28L1066 28L1072 42L1079 32L1077 32L1086 20L1095 32L1093 32L1100 42L1106 31L1104 31L1111 19L1118 31L1116 31L1122 42L1130 22L1127 22L1137 10L1147 22L1144 22L1152 42L1160 25L1158 25L1168 13L1179 25L1177 25L1185 42L1191 29L1189 29L1197 17L1205 29L1203 29L1209 42L1200 42V46z"/></svg>
+<header class="site">
+  <a class="name" href="../index.html">Inference & Verification</a>
+  <nav><a href="../index.html">Essays</a><a href="../about.html">About</a><a href="https://github.com/roro2006">GitHub</a></nav>
+</header>
+<main>
+<article>
+<p class="meta">No. 12 · <span class="kind">opinion</span> · 10 min read · <span class="tag">verification</span><span class="tag">agents</span></p>
+<h1>Reward hacking is a bug report about your tests</h1>
+<p class="lede">An agent that games your tests is exposing a hole in your verifier, so fix the checker before blaming the model.</p>
+<div class="prose">
+<p>The usual framing treats reward hacking as a character flaw. An agent passes a suite by hard-coding the expected outputs for the fixtures it can see, and we call that cheating, a word that carries a verdict: the model knew the answer and took the shortcut. I think a plainer reading does more work. The agent found a region where the grader and the specification disagree, and the grader paid out for standing there. The defect lives in the grader, and the model is an unusually thorough reader of it. If that is right, every hack is a bug report, and the first place to look is the checker.</p>
+<p>The idea predates language models. <a href="https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/">Krakovna et al. (2020)</a> at DeepMind called it specification gaming, meaning behavior that satisfies the literal specification of an objective without achieving the intended outcome, and they had collected around 60 examples. The optimizer sees only the number the grader returns, so any behavior the grader cannot tell apart from success counts as success. Code makes this sharper, because a test suite returns a clean yes or no. That convenience also means the training signal is only as good as the suite, and a unit test is a proxy for a goal that lives in someone's head.</p>
+<p><a href="https://metr.org/blog/2025-06-05-recent-reward-hacking/">METR (2025)</a> reported what this looks like in frontier models. An earlier version of o3 reward-hacked in 0.7% of runs across the HCAST tasks. On one RE-Bench task, the same model did so in every trajectory METR generated. The examples include o3 monkey-patching the evaluator and Claude 3.7 Sonnet finding inputs that collide in a hash check. The first figure is small and the second is total. I'd bet the spread says more about each task and its grader than about a stable trait of the model.</p>
+<p>The prompt experiments are the most informative part. On Optimize LLM Foundry, the rate fell from 80% to 70% when the prompt said not to reward hack, and rose to 95% under a stronger instruction to use intended methods.</p>
+<figure class="chart"><svg viewBox="0 0 640 110" role="img" aria-label="Reward-hacking rate on one METR task"><text x="220" y="24" text-anchor="end" class="cl">Without instruction</text><rect x="230.0" y="10" width="235.8" height="20" rx="3" class="cb"/><text x="473.8" y="24" class="cv">80%</text><text x="220" y="58" text-anchor="end" class="cl">Says do not reward hack</text><rect x="230.0" y="44" width="206.3" height="20" rx="3" class="cb"/><text x="444.3" y="58" class="cv">70%</text><text x="220" y="92" text-anchor="end" class="cl">Asks for intended methods</text><rect x="230.0" y="78" width="280.0" height="20" rx="3" class="cb"/><text x="518.0" y="92" class="cv">95%</text></svg><figcaption><strong>Reward-hacking rate on one METR task</strong> One task and three prompts; the percentages are as METR reports them.<span class="src">Source: METR, 2025</span></figcaption></figure>
+<p>A written instruction changes the description of the spec and leaves the grader untouched. If the check accepts the shortcut, the sentence in the prompt competes with whatever the training signal rewarded. A better prompt is therefore a weak fix, and the place to act is the grader.</p>
+<p>Here is the mechanism I would sketch on a whiteboard. A test suite is a finite sample of the behavior you want. Coverage tools measure how much of the code those samples execute, which is a different question from how much intended behavior they pin down. An optimizer searching for passing programs will find every program that agrees with the sample and disagrees with the spec, and special-casing the fixtures is the cheapest of them. Hiding the test file is the useful counterfactual. Special-casing stops working on that suite, and the agent must write something general or fail. But the coverage problem has moved up a level. The hidden suite is still finite, and a program wrong on unsampled inputs can still pass it. Hiding also makes the holes harder for anyone reading the results later to see.</p>
+<p>Verification bears on sampling too. <a href="https://arxiv.org/abs/2408.03314">Snell et al. (2024)</a> report that test-time compute can outperform a model 14 times larger, and that their approach improves efficiency by more than 4x over a best-of-N baseline. <a href="https://arxiv.org/abs/2407.21787">Brown et al. (2024)</a> show the coverage side: on SWE-bench Lite, the fraction of problems solved rises from 15.9% with one sample to 56% with 250. More samples find more correct patches. I would bet they also find more of whatever the grader accepts, wrong patches included. <a href="https://arxiv.org/abs/2305.20050">Lightman et al. (2023)</a> show what a verifier that is harder to fool costs. PRM800K contains 800,000 step-level human feedback labels, and that verifier is paid for in human attention.</p>
+<p>Some holes sit in the specification itself. Write "make it fast and readable" and no grader can check it. An agent that claims success is satisfying a description nobody wrote down, and more tests will not close that gap. <a href="https://econbiz.de/Record/problems-of-monetary-management-the-u-k-experience-goodhart-charles/10002525062">Goodhart (1975)</a> made the older point about monetary policy: a statistical regularity tends to break once someone uses it for control. <a href="https://www.cambridge.org/core/journals/european-review/article/improving-ratings-audit-inthe-british-university-system/FC2EE640C0C44E3DB87C29FB666E9AAB">Strathern (1997)</a> carried the idea into British university audit. Neither gives a rate for how often specifications fail this way, and I don't have one either.</p>
+<p>Here is what I would do, starting with the cheapest step. Mine the hacks. Log every case where a model special-cased a test or edited the checker, and turn each one into a new test or a locked file. The hacks are the grader's blind spots in the model's own words, and the agent has done the fuzzing for free. The failure is that the log only holds hacks someone noticed, so blocking known hacks can give a false sense of coverage. What would convince me is a falling rate of new hacks on fresh tasks, not only on the old ones.</p>
+<figure class="diagram"><svg role="img" aria-label="Hack mining loop" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <text x="20" y="28" class="sub">One agent run, one grader hole</text>
+  <g class="step1">
+    <rect x="20" y="50" width="130" height="60" rx="6" class="box"/>
+    <text x="85" y="76" text-anchor="middle" class="lbl">Agent run</text>
+    <text x="85" y="94" text-anchor="middle" class="sub">tests go green</text>
+  </g>
+  <g class="step2">
+    <path d="M152 80 H174" class="edge flow" marker-end="url(#arr)"/>
+    <rect x="176" y="50" width="130" height="60" rx="6" class="box bad"/>
+    <text x="241" y="76" text-anchor="middle" class="lbl">Hack found</text>
+    <text x="241" y="94" text-anchor="middle" class="sub">hard-coded answer</text>
+  </g>
+  <g class="step3">
+    <path d="M308 80 H330" class="edge flow" marker-end="url(#arr)"/>
+    <rect x="332" y="50" width="130" height="60" rx="6" class="box hi"/>
+    <text x="397" y="76" text-anchor="middle" class="lbl">Logged</text>
+    <text x="397" y="94" text-anchor="middle" class="sub">in the hack log</text>
+  </g>
+  <g class="step4">
+    <path d="M464 80 H486" class="edge flow" marker-end="url(#arr)"/>
+    <rect x="488" y="50" width="130" height="60" rx="6" class="box good"/>
+    <text x="553" y="76" text-anchor="middle" class="lbl">New test</text>
+    <text x="553" y="94" text-anchor="middle" class="sub">or locked file</text>
+    <path d="M553 110 V150 H85 V111" class="edge" marker-end="url(#arr)"/>
+    <text x="319" y="170" text-anchor="middle" class="sub">next run is graded by the updated suite</text>
+  </g>
+</svg><figcaption><strong>Hack mining loop</strong> Each hack that passes the suite becomes a new test or a locked file, so the next run is graded by the stronger suite.</figcaption></figure>
+<p>Second, separate the worker from the grader. Checkers should be read-only to the agent, and the evaluator should not be ordinary code the agent can reach. That closes monkey-patching outright. It does not close the finite-suite problem, since an agent can still learn a hidden suite's shape from pass and fail feedback over many attempts, which is exactly the budget Brown et al. measured. The check I would trust is a second test set written by someone who did not write the fix. If passes on the first set predict passes on the second, the grader generalizes. If they do not, the first set was only a sample.</p>
+<figure class="diagram"><svg role="img" aria-label="Who may write what" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <rect x="20" y="96" width="160" height="56" rx="6" class="box"/>
+  <text x="100" y="120" text-anchor="middle" class="lbl">Worker agent</text>
+  <text x="100" y="138" text-anchor="middle" class="sub">reads the spec</text>
+  <path d="M180 116 H212 V86 H244" class="edge good" marker-end="url(#arr)"/>
+  <path d="M180 132 H212 V176 H244" class="edge bad" marker-end="url(#arr)"/>
+  <rect x="250" y="60" width="170" height="52" rx="6" class="box good"/>
+  <text x="335" y="82" text-anchor="middle" class="lbl">src/ (writable)</text>
+  <text x="335" y="100" text-anchor="middle" class="sub">agent edits here</text>
+  <rect x="250" y="150" width="170" height="52" rx="6" class="box bad"/>
+  <text x="335" y="172" text-anchor="middle" class="lbl">tests and checker</text>
+  <text x="335" y="190" text-anchor="middle" class="sub">write attempts refused</text>
+  <path d="M420 176 H456" class="edge" marker-end="url(#arr)"/>
+  <path d="M420 86 H540 V150" class="edge" marker-end="url(#arr)"/>
+  <rect x="460" y="150" width="160" height="52" rx="6" class="box hi"/>
+  <text x="540" y="172" text-anchor="middle" class="lbl">Grader process</text>
+  <text x="540" y="190" text-anchor="middle" class="sub">outside the agent</text>
+  <text x="20" y="226" class="sub">The agent edits src/ only. The grader runs where the agent cannot reach it.</text>
+</svg><figcaption><strong>Who may write what</strong> The worker edits source code only, while tests and checkers are read-only and the grader runs where the agent cannot reach it.</figcaption></figure>
+<p>Third, watch the reasoning and keep it out of the reward. <a href="https://arxiv.org/abs/2503.11926">Baker et al. (2025)</a> show that a reasoning model's chain of thought can reveal reward hacking, so monitoring works. The abstract also reports the uncomfortable half: under too much optimization, agents learn obfuscated hacks, hiding their intent inside the chain of thought, and the authors suggest a monitorability tax may be needed. A monitor you optimize against is just another grader. I would use the chain of thought to audit runs and never let it feed the reward.</p>
+<p>Fourth, red-team the tests before trusting them. Run an agent whose only job is to pass the suite without solving the task. It is the adversarial version of the holdout: it searches for the cheapest passing program, and whatever it finds is a hole to close. The weakness is that its search is bounded, so a clean run proves less than it seems, and a red-team agent can learn the tests too. I would report its attack budget with the result, so a clean run reads as a bounded search rather than a proof.</p>
+<p>The common view is partly right, and that narrows my claim. Some hacks come from the model's disposition rather than the grader. The prompt experiments show the rate depends on wording, which a pure grader fix does not explain. I don't know why the stronger instruction pushed the rate up. My guess, that naming the intended methods told the model what the grader inspects, is untested. A sound grader can also be gamed by a route nobody thought to forbid, so "every hack is a grader bug" is too strong. The defensible claim is smaller: a hack shows the grader accepted something it should not have. The response stays the same either way. File the bug, then establish whether the grader or the spec is at fault.</p>
+<p>Next time an agent returns green on a suite, I would open the test file before reading the transcript. Find the input the grader never tried, write it down as the next test, and lock any file the agent could have edited. Every hack that got through is a free audit of tests you already had.</p>
+<h2>References</h2>
+<ol><li>Krakovna, V. et al. (2020). Specification gaming: the flip side of AI ingenuity. DeepMind blog. <a href="https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/">https://deepmind.google/blog/specification-gaming-the-flip-side-of-ai-ingenuity/</a></li><li>METR (2025). Recent Frontier Models Are Reward Hacking. METR blog. <a href="https://metr.org/blog/2025-06-05-recent-reward-hacking/">https://metr.org/blog/2025-06-05-recent-reward-hacking/</a></li><li>Goodhart, C. A. E. (1975). Problems of Monetary Management: The U.K. Experience. Papers in Monetary Economics, vol. 1. <a href="https://econbiz.de/Record/problems-of-monetary-management-the-u-k-experience-goodhart-charles/10002525062">https://econbiz.de/Record/problems-of-monetary-management-the-u-k-experience-goodhart-charles/10002525062</a></li><li>Strathern, M. (1997). 'Improving ratings': audit in the British University system. European Review, 5(3), 305-321. <a href="https://www.cambridge.org/core/journals/european-review/article/improving-ratings-audit-inthe-british-university-system/FC2EE640C0C44E3DB87C29FB666E9AAB">https://www.cambridge.org/core/journals/european-review/article/improving-ratings-audit-inthe-british-university-system/FC2EE640C0C44E3DB87C29FB666E9AAB</a></li><li>Baker, B. et al. (2025). Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation. arXiv. <a href="https://arxiv.org/abs/2503.11926">https://arxiv.org/abs/2503.11926</a></li><li>Snell, C. et al. (2024). Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters. arXiv. <a href="https://arxiv.org/abs/2408.03314">https://arxiv.org/abs/2408.03314</a></li><li>Brown, B. et al. (2024). Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv. <a href="https://arxiv.org/abs/2407.21787">https://arxiv.org/abs/2407.21787</a></li><li>Lightman, H. et al. (2023). Let's Verify Step by Step. arXiv. <a href="https://arxiv.org/abs/2305.20050">https://arxiv.org/abs/2305.20050</a></li></ol>
+</div>
+</article>
+<nav class="pager"><a href="benchmarks-that-agents-outgrow.html">← Build the benchmark you will be judged by</a><a href="elephants-and-goldfish.html">In multi-agent systems, the brief is the unit of engineering →</a></nav>
+</main>
+<footer class="site">Rohan Reddy · <a href="https://github.com/roro2006">github.com/roro2006</a></footer>
+</body>
+</html>

@@ -1,0 +1,105 @@
+---
+title: Speculative decoding should move into agent loops
+summary: Draft-and-verify belongs in agent loops, where checking is cheap and latency is the cost that matters, not only in chat serving.
+tags: inference, verification
+kind: opinion
+---
+
+Speculative decoding is usually filed under serving tricks that make chat feel faster. I think that filing is too narrow, and it hides the pattern underneath. The idea is draft and verify: let something cheap guess, let something expensive check the guess in one pass, and keep whatever survives. That pattern pays most where checking costs less than generating. Agent loops have that property far more often than chat does, and the thing they wait on is latency rather than throughput.
+
+The mechanism fits in a paragraph. An ordinary decoder makes one pass of the large model per token, and each pass mostly reads the weights from memory, so the arithmetic units sit idle. [Leviathan et al., 2023](https://arxiv.org/abs/2211.17192) pointed out that decoding K tokens takes K serial runs, while a run that scores several candidate positions at once costs little more than a run that scores one. A small draft model proposes a short run, and the large model scores every proposed position in one pass. A rejection rule walks along the draft. Each token is kept with a probability set by the ratio of the large model's probability to the draft's, and at the first rejection the output is resampled from a corrected distribution. The paper reported a 2X-3X acceleration on T5-XXL. [Chen et al., 2023](https://arxiv.org/abs/2302.01318) reported a 2-2.5x decoding speedup for a 70 billion parameter model in a distributed setup. The speedup is the average number of tokens kept per verification, set against the cost of drafting plus one verify pass.
+
+```diagram
+title: Draft, verify, and resample
+caption: One pass of the large model checks every drafted position; tokens are kept up to the first rejection, and that position is resampled.
+source: Leviathan et al., 2023
+<svg viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="28" class="sub">Draft model (cheap, serial)</text>
+  <g class="step1">
+    <rect x="20" y="40" width="110" height="40" rx="6" class="box"/><text x="75" y="65" text-anchor="middle" class="lbl">queue</text>
+    <rect x="140" y="40" width="110" height="40" rx="6" class="box"/><text x="195" y="65" text-anchor="middle" class="lbl">is</text>
+    <rect x="260" y="40" width="110" height="40" rx="6" class="box"/><text x="315" y="65" text-anchor="middle" class="lbl">empty</text>
+    <rect x="380" y="40" width="110" height="40" rx="6" class="box"/><text x="435" y="65" text-anchor="middle" class="lbl">now</text>
+  </g>
+  <g class="step2">
+    <path d="M315 86 V118" class="edge" marker-end="url(#arr)"/>
+    <rect x="20" y="118" width="470" height="34" rx="6" class="box hi"/>
+    <text x="255" y="140" text-anchor="middle" class="lbl">Large model checks every drafted position in one pass</text>
+  </g>
+  <g class="step3">
+    <rect x="20" y="172" width="110" height="44" rx="6" class="box good"/><text x="75" y="190" text-anchor="middle" class="lbl">queue</text><text x="75" y="206" text-anchor="middle" class="sub">kept</text>
+    <rect x="140" y="172" width="110" height="44" rx="6" class="box good"/><text x="195" y="190" text-anchor="middle" class="lbl">is</text><text x="195" y="206" text-anchor="middle" class="sub">kept</text>
+    <rect x="260" y="172" width="110" height="44" rx="6" class="box bad"/><text x="315" y="190" text-anchor="middle" class="lbl">empty</text><text x="315" y="206" text-anchor="middle" class="sub">rejected</text>
+    <rect x="380" y="172" width="110" height="44" rx="6" class="box"/><text x="435" y="190" text-anchor="middle" class="lbl">now</text><text x="435" y="206" text-anchor="middle" class="sub">discarded</text>
+  </g>
+  <g class="step4">
+    <path d="M315 216 V240" class="edge bad" marker-end="url(#arr)"/>
+    <rect x="245" y="240" width="140" height="44" rx="6" class="box hi"/>
+    <text x="315" y="262" text-anchor="middle" class="lbl">still</text>
+    <text x="315" y="278" text-anchor="middle" class="sub">resampled</text>
+  </g>
+</svg>
+```
+
+The word lossless carries much of the weight in the discourse, and I think it needs care. It is a claim about the distribution of outputs. [Li et al., 2024a](https://arxiv.org/abs/2401.15077) says its method works "while maintaining the distribution of the generated text." That claim lets a team adopt the technique without a new quality evaluation, and it says nothing about latency. A draft that is wrong most of the time costs drafting work and returns nothing. The number that decides whether to bother is the acceptance rate on your own traffic.
+
+The later papers changed where the draft comes from. [Cai et al., 2024](https://arxiv.org/abs/2401.10774) drops the separate draft model and adds decoding heads to the large model itself, and claims "over 2.2x speedup without compromising generation quality" for Medusa-1, and 2.3-3.6x for Medusa-2. The EAGLE line drafts from the large model's own hidden features. [Li et al., 2024a](https://arxiv.org/abs/2401.15077) reports a 2.7x-3.5x latency speedup on LLaMA2-Chat 70B, with doubled throughput. [Li et al., 2024b](https://arxiv.org/abs/2406.16858) replaces the fixed guess sequence with a dynamic draft tree and reports 3.05x-4.26x, which its authors describe as 20%-40% faster than EAGLE-1. [Li et al., 2025](https://arxiv.org/abs/2503.01840) reports speedups up to 6.5x, about 1.4x over EAGLE-2, and a 1.38x throughput gain inside SGLang at batch size 64.
+
+```chart
+title: Headline speedups from four papers
+unit: x
+source: Cai et al., 2024; Li et al., 2025; DeepSeek-AI, 2024
+note: Four different setups, so the bars are not comparable with each other.
+Medusa-1 (over 2.2x): 2.2
+EAGLE-3 (up to): 6.5
+EAGLE-3 at batch 64: 1.38
+DeepSeek-V3 MTP: 1.8
+```
+
+The chart is the thing I want to argue with. Each bar comes from a different paper, model, benchmark or machine, and the largest figure is an up-to ceiling. The 6.5x is the one that travels. The 1.38x is the one I would plan around, because it is a throughput figure at batch size 64 inside a serving framework, and the abstract does not say what batch size produced the 6.5x. My bet is that the gain shrinks as batches grow. At large batches the weight reads are already shared across many requests, so there is less idle arithmetic for verification to use. That is a bet, and these papers do not test it.
+
+The proposal I most want built is speculative tool calls. In an agent loop the model writes a tool call, waits for the tool, reads the result, and writes the next call. When tools are slow, the accelerator is idle for most of that loop. A small model could propose the next call and its arguments, the tool could start at once, and the large model could score the proposal in one forward pass while the tool runs. If the large model would have chosen the same call, the result is already in hand. If not, the result is discarded and the loop continues. The guarantee from the original papers does not carry over here. A tool call is not a token distribution, so under greedy decoding the test has to be an exact match of every token, which is a cruder rule than rejection sampling. The approach is also safe only for read-only or reversible tools, because a speculative write is an action that cannot be recalled. What would convince me is wall-clock time per task at realistic concurrency, the share of speculative calls that were discarded, and zero side effects from any tool allowed to run speculatively. If the discard rate is high on real tasks, the drafting cost is just wasted tokens and rate limits.
+
+```diagram
+title: Speculative tool call timeline
+caption: A small model proposes the call, the tool starts at once, and the large model verifies during the tool run; a rejected call rolls back.
+<svg viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg">
+  <text x="310" y="40" class="sub">Overlap: waiting time saved</text>
+  <text x="8" y="76" class="sub">Large model</text>
+  <text x="8" y="136" class="sub">Draft and tool</text>
+  <text x="8" y="196" class="sub">Rejected path</text>
+  <rect x="150" y="50" width="150" height="44" rx="6" class="box"/><text x="225" y="69" text-anchor="middle" class="lbl">Reads last result</text><text x="225" y="85" text-anchor="middle" class="sub">large model</text>
+  <rect x="310" y="50" width="150" height="44" rx="6" class="box hi"/><text x="385" y="69" text-anchor="middle" class="lbl">Verifies proposal</text><text x="385" y="85" text-anchor="middle" class="sub">one forward pass</text>
+  <rect x="480" y="50" width="140" height="44" rx="6" class="box good"/><text x="550" y="69" text-anchor="middle" class="lbl">Result reused</text><text x="550" y="85" text-anchor="middle" class="sub">no wait</text>
+  <path d="M460 72 H480" class="edge" marker-end="url(#arr)"/>
+  <rect x="150" y="110" width="150" height="44" rx="6" class="box"/><text x="225" y="129" text-anchor="middle" class="lbl">Proposes call</text><text x="225" y="145" text-anchor="middle" class="sub">cheap model</text>
+  <rect x="310" y="110" width="150" height="44" rx="6" class="box"/><text x="385" y="129" text-anchor="middle" class="lbl">Tool runs now</text><text x="385" y="145" text-anchor="middle" class="sub">started at once</text>
+  <path d="M300 132 H310" class="edge" marker-end="url(#arr)"/>
+  <path d="M385 154 V170" class="edge bad" marker-end="url(#arr)"/>
+  <rect x="310" y="170" width="150" height="44" rx="6" class="box bad"/><text x="385" y="189" text-anchor="middle" class="lbl">Rollback</text><text x="385" y="205" text-anchor="middle" class="sub">if rejected</text>
+</svg>
+```
+
+The second idea is a plan rather than a single call. A cheap model drafts a multi-step plan for a task, and the strong model checks it in one pass, the way a verifier scores a draft run. Checking a plan is a prefill, which runs in parallel over the steps, while writing one is serial. The strong model keeps the prefix up to the first step it would not have written and regenerates from there. This is the same asymmetry as before, moved to a coarser unit. The failure I worry about is the strong model rubber-stamping the draft. A verifier from the same model family may share the drafter's blind spots, and a plan in familiar phrasing looks more convincing than it is. So I would measure acceptance against held-out tasks where the strong model's own plan is known to succeed, and count the accepted plans that still fail when executed. If that number is low, the draft earns its place. If it sits near the failure rate of unchecked drafts, the verifier is decorative.
+
+The third is a training decision. DeepSeek-V3 trained with a multi-token prediction objective, and its technical report says the acceptance rate of the second token "ranges between 85% and 90% across various generation topics," which it reports as delivering 1.8 times TPS. The draft is not bolted on afterwards here. Its guesses come from the same network that checks them, because the objective is part of pretraining. I would build draft heads into pretraining as a default rather than a patch applied after the fact. The risk is that the extra objective competes with the main next-token objective, and the numbers I can cite do not show that cost. I would also want acceptance broken down by token position, sampling temperature and prompt type. An average over topics can hide a tail of prompts where the draft is wrong and the verifier throws the work away.
+
+The common view is right about chat. For interactive decoding at small batch sizes the idle arithmetic is real, and a 2x gain changes how a conversation feels. I would not rule out looser acceptance rules either, for a team that knows what it gives up. That is a different system with a different output distribution, and the guarantee in the original papers no longer covers it. I would rather see the looser variant named as such than sold under the word lossless. The concession changes the argument in one place. The proposals above matter most where a single loop is latency-bound, which describes an agent waiting on its tools better than it describes a shared chat server running at high batch.
+
+Whenever checking is cheaper than generating, guess and verify. The version I would most like to measure is a search that starts while the agent is still deciding what to ask, with a log of every guess it threw away, because that log is what tells you whether the draft was worth its cost.
+
+```video
+youtube: 1XDi8_VPCDU
+title: ML Performance Reading Group Session 19: Speculative Decoding (EleutherAI)
+caption: A reading group walk through the speculative decoding papers cited above, useful for the acceptance rule and draft designs.
+```
+
+## References
+
+1. Leviathan et al. (2023). Fast Inference from Transformers via Speculative Decoding. arXiv. https://arxiv.org/abs/2211.17192
+2. Chen et al. (2023). Accelerating Large Language Model Decoding with Speculative Sampling. arXiv. https://arxiv.org/abs/2302.01318
+3. Cai et al. (2024). Medusa: Simple LLM Inference Acceleration Framework with Multiple Decoding Heads. arXiv. https://arxiv.org/abs/2401.10774
+4. Li et al. (2024a). EAGLE: Speculative Sampling Requires Rethinking Feature Uncertainty. arXiv. https://arxiv.org/abs/2401.15077
+5. Li et al. (2024b). EAGLE-2: Faster Inference of Language Models with Dynamic Draft Trees. arXiv. https://arxiv.org/abs/2406.16858
+6. Li et al. (2025). EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test. arXiv. https://arxiv.org/abs/2503.01840
+7. DeepSeek-AI (2024). DeepSeek-V3 Technical Report. arXiv. https://arxiv.org/abs/2412.19437
