@@ -3,6 +3,7 @@ title: Disaggregation should be judged by the cache it moves
 summary: Disaggregated serving should be judged by the KV cache it moves across the network, not by the throughput multiplier in its headline.
 tags: inference, hardware
 kind: opinion
+date: 2026-10-06
 ---
 
 The common view is that disaggregated serving, which runs prefill and decode on separate pools of hardware, is a niche for very large deployments. I think that is close to backwards. Splitting the two phases is the first step toward running inference like a distributed database, and agent workloads, with long contexts, short answers and repeated prefixes, will push the idea much further than chat did. The split also has a cost that most published tables leave out. The cache has to cross a network between prefill and decode, and that transfer is the part of the design I would argue hardest about.

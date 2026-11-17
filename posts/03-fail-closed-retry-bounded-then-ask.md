@@ -3,6 +3,7 @@ title: Retries are a bet against your checker
 summary: The number that decides a product is how often the checker approves a wrong answer after k tries, and escalation should be a budgeted resource.
 tags: verification, agents, inference
 kind: opinion
+date: 2026-08-26
 ---
 
 The common view is that a generate-and-filter loop gets better as it samples more. Draw ten candidates, keep the one that passes, and the solve rate climbs. I think that is right about coverage and wrong about trust. What a product ships is the set of answers the checker approved, and that set grows with every retry, including the wrong answers the checker let through. The number I would track is the rate at which the verifier approves a wrong answer after k tries. Everything else in the design should follow from that rate.

@@ -3,6 +3,7 @@ title: Application teams should design around the KV cache
 summary: Application teams should shape prompts and agent loops around the KV cache, since it decides what a server can reuse and what each token costs.
 tags: inference, hardware
 kind: opinion
+date: 2026-09-28
 ---
 
 Most teams file the KV cache under infrastructure, a detail for the serving group to worry about while the application group writes prompts. I think that split is backwards. The cache decides how many requests a server can hold, how much of a prompt it can reuse, and what a long agent session costs to keep going. Each of those depends on choices the application makes: where the stable text sits in the prompt, whether tools are listed in the same order every time, and whether an agent rewrites its own history. The serving team cannot repair those choices from below. Application teams should design prompts and agent loops around the cache, and they should report its behavior with the same care they give model quality.

@@ -3,6 +3,7 @@ title: Build the benchmark you will be judged by
 summary: Public agent leaderboards saturate quickly, so teams should own private task suites and measure real uplift instead.
 tags: agents, verification
 kind: opinion
+date: 2026-11-02
 ---
 
 The standard advice is to pick the model at the top of SWE-bench. I think that advice is wrong for most teams, and wrong in a predictable way. A public leaderboard measures someone else's tasks, run through someone else's harness, and its usefulness expires once the tasks stop separating models. A team should own the measure instead: a private suite built from its own work, refreshed often, and read beside a small study of what the tools do to its own speed.

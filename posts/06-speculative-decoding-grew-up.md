@@ -3,6 +3,7 @@ title: Speculative decoding should move into agent loops
 summary: Draft-and-verify belongs in agent loops, where checking is cheap and latency is the cost that matters, not only in chat serving.
 tags: inference, verification
 kind: opinion
+date: 2026-09-19
 ---
 
 Speculative decoding is usually filed under serving tricks that make chat feel faster. I think that filing is too narrow, and it hides the pattern underneath. The idea is draft and verify: let something cheap guess, let something expensive check the guess in one pass, and keep whatever survives. That pattern pays most where checking costs less than generating. Agent loops have that property far more often than chat does, and the thing they wait on is latency rather than throughput.

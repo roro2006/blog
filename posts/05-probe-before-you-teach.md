@@ -3,6 +3,7 @@ title: Measure the edge before you teach or edit
 summary: Tutors and coding agents should locate the edge of what the user knows before explaining or editing, since a guessed plan only looks efficient.
 tags: agents, verification
 kind: opinion
+date: 2026-09-11
 ---
 
 Most tutors and coding agents start helping the moment a request arrives, on the theory that a question is friction and a fast answer is respect. I think that theory has the cost backwards. The most under-built phase in both kinds of tool is measurement before action: spending real budget to find where the user's knowledge, or the codebase's actual behavior, stops matching the tool's model of it. A plan built on an unchecked starting point looks efficient for a few steps. Then the error surfaces somewhere the tool never looked, and gets blamed on the wrong thing.

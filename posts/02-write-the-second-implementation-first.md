@@ -3,6 +3,7 @@ title: Write the second implementation before the fast one
 summary: Agents make code cheap, so an independent reference implementation is the scarce oracle, and it should be written first.
 tags: verification, agents, inference
 kind: opinion
+date: 2026-08-18
 ---
 
 The usual order for agent-written code is backwards. Ask for the feature, then ask for tests, and the tests inherit the agent's reading of the spec, so they can agree with a misreading perfectly. Agents made generation cheap, which leaves a trusted oracle as the scarce thing. My view is that the most valuable request is often a slow, obviously correct reference implementation, written first and frozen, with the fast version checked against it afterward.

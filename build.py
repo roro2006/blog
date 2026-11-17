@@ -13,6 +13,7 @@ No dependencies. Posts live in posts/*.md with a small front-matter block:
 import html
 import re
 import shutil
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -21,12 +22,17 @@ OUT = ROOT / "docs"
 STATIC = ROOT / "static"
 
 SITE = {
-    "title": "Inference & Verification",
+    "title": "All will be Rohan",
     "author": "Rohan Reddy",
-    "tagline": "Notes on inference, verification, and building with agents.",
+    "tagline": "Notes from the strange oil: inference, agents, and making the wrong answer uncastable.",
     "github": "https://github.com/roro2006",
     "date": "2026-11-17",
 }
+
+
+def display_date(value):
+    """Format ISO front-matter dates consistently across the site."""
+    return date.fromisoformat(value).strftime("%b %d, %Y").replace(" 0", " ")
 
 
 # ---------- tiny markdown ----------
@@ -303,7 +309,7 @@ def build():
     shutil.copy(STATIC / "style.css", OUT / "style.css")
     (OUT / ".nojekyll").write_text("")
 
-    posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["num"])
+    posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)
     all_tags = sorted({t for p in posts for t in p["tags"]})
 
     for idx, p in enumerate(posts):
@@ -314,7 +320,7 @@ def build():
         pager += f'<a href="{next_p["slug"]}.html">{html.escape(next_p["title"])} →</a>' if next_p else "<span></span>"
         pager += "</nav>"
         body = f"""<article>
-<p class="meta">No. {p["num"]:02d} · {kind_label(p)}{p["minutes"]} min read · {tag_list(p["tags"])}</p>
+<p class="meta">No. {p["num"]:02d} · {display_date(p["date"])} · {kind_label(p)}{p["minutes"]} min read · {tag_list(p["tags"])}</p>
 <h1>{html.escape(p["title"])}</h1>
 <p class="lede">{html.escape(p["summary"])}</p>
 <div class="prose">
@@ -330,10 +336,10 @@ def build():
         f"""<li data-tags="{' '.join(p['tags'])}">
   <a href="posts/{p['slug']}.html"><span class="num">{p['num']:02d}</span><span class="t">{html.escape(p['title'])}</span></a>
   <p>{html.escape(p['summary'])}</p>
-  <p class="meta">{kind_label(p)}{p['minutes']} min · {tag_list(p['tags'])}</p>
+  <p class="meta">{display_date(p['date'])} · {kind_label(p)}{p['minutes']} min · {tag_list(p['tags'])}</p>
 </li>""" for p in posts)
-    filters = '<button class="on" data-tag="">all</button>' + "".join(
-        f'<button data-tag="{t}">{t}</button>' for t in all_tags)
+    filters = '<button class="on" data-tag="" onclick="filterPosts(this)">all</button>' + "".join(
+        f'<button data-tag="{t}" onclick="filterPosts(this)">{t}</button>' for t in all_tags)
     index = f"""<section class="intro">
 <h1>{SITE["tagline"]}</h1>
 <p>Essays on how models get served, how agents get built, and how anyone knows the output is right. Each one cites its sources, and the numbers come from the papers.</p>
@@ -343,12 +349,12 @@ def build():
 {items}
 </ol>
 <script>
-document.querySelectorAll('.filters button').forEach(b => b.onclick = () => {{
+function filterPosts(b) {{
   document.querySelectorAll('.filters button').forEach(x => x.classList.toggle('on', x === b));
   const t = b.dataset.tag;
   document.querySelectorAll('.posts li').forEach(li =>
     li.hidden = t && !li.dataset.tags.split(' ').includes(t));
-}});
+}}
 </script>"""
     (OUT / "index.html").write_text(page(SITE["title"], index), encoding="utf-8")
 

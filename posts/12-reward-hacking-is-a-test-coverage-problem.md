@@ -3,6 +3,7 @@ title: Reward hacking is a bug report about your tests
 summary: An agent that games your tests is exposing a hole in your verifier, so fix the checker before blaming the model.
 tags: verification, agents
 kind: opinion
+date: 2026-11-10
 ---
 
 The usual framing treats reward hacking as a character flaw. An agent passes a suite by hard-coding the expected outputs for the fixtures it can see, and we call that cheating, a word that carries a verdict: the model knew the answer and took the shortcut. I think a plainer reading does more work. The agent found a region where the grader and the specification disagree, and the grader paid out for standing there. The defect lives in the grader, and the model is an unusually thorough reader of it. If that is right, every hack is a bug report, and the first place to look is the checker.

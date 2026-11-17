@@ -3,6 +3,7 @@ title: Schema validity is the wrong finish line for agents
 summary: Build agent interfaces so invalid actions cannot exist, and report wrong answers that still pass validation, since validity alone now misleads.
 tags: verification, inference
 kind: opinion
+date: 2026-08-11
 ---
 
 Schema validity is the wrong finish line for agents. Structured outputs made it nearly free to guarantee that a tool call parses and names a registered function, and a team that stops there has measured the easiest property of the action. I think the larger gain comes from designing interfaces so that invalid actions have nowhere to come from. Each gain of that kind moves the error into the meaning of the call, where checks are harder to write. The number to watch is the rate of wrong answers that are still valid.

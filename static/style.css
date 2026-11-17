@@ -28,7 +28,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
-  font: 18px/1.7 Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+  font: 18px/1.7 "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
 }
 a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 header.site, main, footer.site { max-width: var(--measure); margin: 0 auto; padding: 0 16px; }

@@ -3,6 +3,7 @@ title: Test-time compute is capped by its verifier
 summary: Extra inference compute only helps as far as a checker can tell right answers apart, so teams should fund the checker first.
 tags: inference, verification
 kind: opinion
+date: 2026-10-24
 ---
 
 I think most teams should stop buying more samples until they have bought a better checker. The common view is that reasoning models and more samples will keep improving results on their own. That view is half right, and the half it skips decides whether the extra compute reaches the user.

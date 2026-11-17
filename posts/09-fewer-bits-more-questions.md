@@ -3,6 +3,7 @@ title: Quantized models need task tests, not just perplexity
 summary: A quantized model should earn release on the tasks it must do, and perplexity is too coarse to grant that.
 tags: inference, verification
 kind: opinion
+date: 2026-10-15
 ---
 
 If perplexity barely moves after quantization, I don't think that tells you the model is fine. It tells you the model changed. Whether the change matters depends on the jobs you deployed it for, and perplexity averages over a corpus that probably contains none of them. Teams lean on a small perplexity delta as a clean bill of health, and I think that habit is the weakest link in most quantization decisions.

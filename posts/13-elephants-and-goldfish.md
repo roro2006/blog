@@ -3,6 +3,7 @@ title: In multi-agent systems, the brief is the unit of engineering
 summary: Engineer multi-agent work as reviewable briefs for stateless workers, because a brief can be checked and a shared memory cannot.
 tags: agents, workflow
 kind: opinion
+date: 2026-11-17
 ---
 
 The common view is that multi-agent design is an org chart. Give one agent a manager's title, another a researcher's, a third a reviewer's, and expect the division of labor to produce better work. I think that view points at the wrong unit. The unit of engineering is the brief, meaning the text a worker receives when it starts. Stateless workers with complete briefs should beat workers that share a long memory, and the reason is practical. A brief can be reviewed, versioned and tested. A memory cannot.

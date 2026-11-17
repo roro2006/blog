@@ -3,6 +3,7 @@ title: Treat the spec as the artifact and the code as its cache
 summary: A spec earns trust only when its status column records which claims the code has satisfied, and specs deserve the same review as code.
 tags: workflow, agents
 kind: opinion
+date: 2026-09-03
 ---
 
 The common view is that docs drift and the code is the truth. Anyone who has opened a README describing a feature removed two releases ago knows the failure, and I would not argue with the complaint. I think the conclusion is wrong for teams that now have agents writing most of their code. When generation is cheap, the thing a regenerated implementation gets checked against is the durable artifact. The code becomes something closer to a cache that can be rebuilt. The spec is what deserves versioning, review and tests, with the rigor we once reserved for code.
