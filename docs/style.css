@@ -46,7 +46,6 @@ header.site nav a { color: var(--muted); text-decoration: none; }
 header.site nav a:hover { color: var(--fg); }
 main { padding-top: 40px; padding-bottom: 64px; }
 footer.site {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding-top: 20px; padding-bottom: 40px; border-top: 1px solid var(--rule);
   color: var(--muted); font: 14px system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -162,19 +161,28 @@ figure.diagram .src, figure.video .src { display: block; margin-top: 4px; font-s
   figure.diagram figcaption { position: sticky; left: 0; max-width: calc(100vw - 66px); }
 }
 
-/* The Tangle: twisted metal, trailing vines, and amber haze. */
-.treeline {
-  height: clamp(112px, 19vw, 210px);
-  background: #443f29 url("mirrodin-tangle.png") repeat-x center bottom / auto 100%;
-  image-rendering: pixelated;
-  border-bottom: 2px solid var(--copper);
+/* The homepage shows the complete painting. Interior pages use a shallow crop. */
+.forest {
+  max-width: calc(var(--measure) - 32px);
+  margin: 0 auto;
+  width: calc(100% - 32px);
+  background: #22291a;
+  color: #ece9d6;
+  border: 1px solid var(--copper);
+  border-top: 0;
 }
-.brood { display: block; flex: none; image-rendering: pixelated; }
-.intro .brood { float: right; margin: 0 0 8px 12px; }
-.intro { display: flow-root; border-left: 3px solid var(--copper); padding-left: 14px; }
-@media (max-width: 520px) {
-  .intro .brood { width: 65px; height: 55px; }
+.forest img {
+  display: block; width: 100%; height: clamp(104px, 22vw, 150px);
+  object-fit: cover; object-position: center 45%;
 }
+.forest-full { background: radial-gradient(ellipse at center, #4f4a2e, #22291a 75%); }
+.forest-full img { width: min(100%, 402px); height: auto; margin: 0 auto; }
+.forest figcaption {
+  padding: 6px 12px; text-align: center;
+  font: 12px/1.5 system-ui, sans-serif;
+}
+.forest figcaption a { color: inherit; text-decoration-color: #d09955; }
+.intro { border-left: 3px solid var(--copper); padding-left: 14px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 a:hover { text-decoration-color: var(--accent); }

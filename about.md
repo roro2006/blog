@@ -5,3 +5,5 @@ This blog is where I work through that question in public. I write about inferen
 Outside of work, I’m an avid TCG player, especially of *Magic: The Gathering* and *Riftbound*, and, for better or worse, a long-entrenched *League of Legends* player. My love of explaining ideas and writing down my thoughts grows out of an even deeper love of reading. Among my favorite authors are Gene Wolfe, Ursula K. Le Guin, and Kazuo Ishiguro; the books I’ve rated most highly are *The Shadow of the Torturer* and *Infinite Jest*.
 
 Code is on [GitHub](https://github.com/roro2006).
+
+The New Phyrexia theme is unofficial fan content under [Wizards’ Fan Content Policy](https://company.wizards.com/en/legal/fancontentpolicy). Wizards has neither approved nor endorsed it. *Forest* is illustrated by Mark Tedin. © Wizards of the Coast LLC.

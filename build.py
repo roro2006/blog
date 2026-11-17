@@ -262,10 +262,10 @@ def parse(path):
 
 # ---------- templates ----------
 
-def page(title, body, depth=0, description=""):
+def page(title, body, depth=0, description="", show_full_forest=False):
     up = "../" * depth
     desc = html.escape(description or SITE["tagline"])
-    footer_creature = "root-crawler" if depth else "tangle-guardian"
+    forest_class = "forest forest-full" if show_full_forest else "forest"
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -273,20 +273,22 @@ def page(title, body, depth=0, description=""):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{desc}">
-<link rel="stylesheet" href="{up}style.css">
+<link rel="stylesheet" href="{up}style.css?v=tedin-forest">
 </head>
 <body>
-<div class="treeline" aria-hidden="true"></div>
 <header class="site">
   <a class="name" href="{up}index.html">{SITE["title"]}</a>
   <nav><a href="{up}index.html">Essays</a><a href="{up}about.html">About</a><a href="{SITE["github"]}">GitHub</a></nav>
 </header>
+<figure class="{forest_class}">
+  <img src="{up}forest-mark-tedin.png" width="402" height="360" alt="Gnarled metal trees rise through amber haze above a small fire.">
+  <figcaption><a href="https://mark-tedin-illustration.square.site/product/forest-7-epson-print/33?si=true"><cite>Forest</cite> by Mark Tedin</a> · New Phyrexia</figcaption>
+</figure>
 <main>
 {body}
 </main>
 <footer class="site">
   <span>{SITE["author"]} · <a href="{SITE["github"]}">github.com/roro2006</a></span>
-  <img class="brood" src="{up}{footer_creature}.png" width="78" height="66" alt="">
 </footer>
 </body>
 </html>
@@ -310,8 +312,7 @@ def build():
         else:
             shutil.rmtree(f, ignore_errors=True)
     (OUT / "posts").mkdir(exist_ok=True)
-    for asset in ("style.css", "mirrodin-tangle.png", "maze-stalker.png",
-                  "tangle-guardian.png", "root-crawler.png"):
+    for asset in ("style.css", "forest-mark-tedin.png"):
         shutil.copy(STATIC / asset, OUT / asset)
     (OUT / ".nojekyll").write_text("")
 
@@ -347,7 +348,6 @@ def build():
     filters = '<button class="on" data-tag="" onclick="filterPosts(this)">all</button>' + "".join(
         f'<button data-tag="{t}" onclick="filterPosts(this)">{t}</button>' for t in all_tags)
     index = f"""<section class="intro">
-<img class="brood" src="maze-stalker.png" width="104" height="88" alt="">
 <h1>{SITE["tagline"]}</h1>
 <p>Essays on how models get served, how agents get built, and how anyone knows the output is right. Each one cites its sources, and the numbers come from the papers.</p>
 </section>
@@ -363,7 +363,8 @@ function filterPosts(b) {{
     li.hidden = t && !li.dataset.tags.split(' ').includes(t));
 }}
 </script>"""
-    (OUT / "index.html").write_text(page(SITE["title"], index), encoding="utf-8")
+    (OUT / "index.html").write_text(
+        page(SITE["title"], index, show_full_forest=True), encoding="utf-8")
 
     about_src = (ROOT / "about.md").read_text(encoding="utf-8")
     about = f'<article><h1>About</h1><div class="prose">{markdown(about_src)}</div></article>'
