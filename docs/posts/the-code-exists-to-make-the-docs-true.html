@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Treat the spec as the artifact and the code as its cache · All will be Rohan</title>
 <meta name="description" content="A spec earns trust only when its status column records which claims the code has satisfied, and specs deserve the same review as code.">
-<link rel="stylesheet" href="../style.css?v=text-only">
+<link rel="stylesheet" href="../style.css?v=essay-media">
 </head>
 <body>
 <header class="site">
@@ -21,10 +21,75 @@
 <p>The common view is that docs drift and the code is the truth. Anyone who has opened a README describing a feature removed two releases ago knows the failure, and I would not argue with the complaint. I think the conclusion is wrong for teams that now have agents writing most of their code. When generation is cheap, the thing a regenerated implementation gets checked against is the durable artifact. The code becomes something closer to a cache that can be rebuilt. The spec is what deserves versioning, review and tests, with the rigor we once reserved for code.</p>
 <p>The idea predates agents by a long way, and each step in its history adds one constraint. <a href="https://tom.preston-werner.com/2010/08/23/readme-driven-development.html">Preston-Werner, 2010</a> argued that the README should be written first, because until you have written about the software you cannot know what you are going to code. <a href="https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes">Bryar and Carr, 2021</a> describe Amazon's working-backwards process, which asks for a short press release and a bounded FAQ before anything is built. <a href="https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/">GitHub, 2025</a> launched Spec Kit that year and moved the field's slogan from code as the source of truth to intent as the source of truth. Preston-Werner fixes the order, Amazon fixes the length, and the Spec Kit launch fixes what counts as authoritative. I underrate the length cap most. A document that cannot be read in one sitting is rarely checked against the code afterward.</p>
 <p>The first proposal is a rule for the status table. Every claim in a spec either links to a test that exercises it, or appears in the table marked stubbed or untested, and CI fails when a claim has neither. The table never says the product works. It says which sentences are true today, which is a smaller claim and a more useful one. Working means the module has run end to end on the target it was built for. Stubbed means the interface exists and returns placeholder results. Untested means the code is written and may be correct, but nothing has exercised it.</p>
-<p class="media-note"><strong>Claims table and CI gate</strong> Each claim either links to a test or carries a status, and the gate fails the row that has neither.</p>
+<figure class="diagram"><svg role="img" aria-label="Claims table and CI gate" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <text x="16" y="32" class="sub">Claim</text>
+  <text x="196" y="32" class="sub">Evidence</text>
+  <text x="352" y="32" class="sub">Status</text>
+  <rect x="16" y="40" width="168" height="36" rx="6" class="box"/>
+  <text x="100" y="62" text-anchor="middle" class="sub">Refund date shown</text>
+  <rect x="196" y="40" width="140" height="36" rx="6" class="box"/>
+  <text x="266" y="62" text-anchor="middle" class="sub">fixture test</text>
+  <rect x="352" y="40" width="96" height="36" rx="6" class="box hi"/>
+  <text x="400" y="62" text-anchor="middle" class="lbl">stubbed</text>
+  <path d="M448 58 H476" class="edge" marker-end="url(#arr)"/>
+  <rect x="16" y="88" width="168" height="36" rx="6" class="box"/>
+  <text x="100" y="110" text-anchor="middle" class="sub">Retries hit gateway</text>
+  <rect x="196" y="88" width="140" height="36" rx="6" class="box"/>
+  <text x="266" y="110" text-anchor="middle" class="sub">none</text>
+  <rect x="352" y="88" width="96" height="36" rx="6" class="box bad"/>
+  <text x="400" y="110" text-anchor="middle" class="lbl">untested</text>
+  <path d="M448 106 H476" class="edge" marker-end="url(#arr)"/>
+  <rect x="16" y="136" width="168" height="36" rx="6" class="box"/>
+  <text x="100" y="158" text-anchor="middle" class="sub">Brief reaches worker</text>
+  <rect x="196" y="136" width="140" height="36" rx="6" class="box"/>
+  <text x="266" y="158" text-anchor="middle" class="sub">CI run link</text>
+  <rect x="352" y="136" width="96" height="36" rx="6" class="box good"/>
+  <text x="400" y="158" text-anchor="middle" class="lbl">working</text>
+  <path d="M448 154 H476" class="edge" marker-end="url(#arr)"/>
+  <rect x="16" y="184" width="168" height="36" rx="6" class="box"/>
+  <text x="100" y="206" text-anchor="middle" class="sub">Tracking page is live</text>
+  <rect x="196" y="184" width="140" height="36" rx="6" class="box bad"/>
+  <text x="266" y="206" text-anchor="middle" class="sub">none</text>
+  <rect x="352" y="184" width="96" height="36" rx="6" class="box bad"/>
+  <text x="400" y="206" text-anchor="middle" class="lbl">missing</text>
+  <path d="M448 202 H476" class="edge bad" marker-end="url(#arr)"/>
+  <rect x="476" y="40" width="148" height="180" rx="6" class="box hi"/>
+  <text x="550" y="70" text-anchor="middle" class="lbl">CI gate</text>
+  <text x="550" y="96" text-anchor="middle" class="sub">fails any row with</text>
+  <text x="550" y="112" text-anchor="middle" class="sub">neither evidence</text>
+  <text x="550" y="128" text-anchor="middle" class="sub">nor a status</text>
+  <rect x="488" y="158" width="124" height="40" rx="6" class="box bad"/>
+  <text x="550" y="183" text-anchor="middle" class="lbl">build fails</text>
+</svg><figcaption><strong>Claims table and CI gate</strong> Each claim either links to a test or carries a status, and the gate fails the row that has neither.</figcaption></figure>
 <p>The untested row carries most of the value. Suppose a payment retry path is marked untested because it was written against a mock gateway and has never run against the real one. A planner reading that cell knows the launch carries an integration risk. A coding agent asked to extend the retry logic reads the same cell and learns that finishing it means a run against the real gateway. If the row said only that retries exist, a reader would assume the path had run end to end, and the first real failure would be a surprise instead of a checkpoint. Working and working against a mock are two different claims, and a good table keeps both in the same column so a reader cannot mistake one for the other.</p>
 <p>The second proposal is a press release and a FAQ before handing work to an agent. The press release is the acceptance test. If it describes a customer-visible behavior, the agent is finished when that behavior holds, and a reviewer can check the sentence against a run. The FAQ holds the edge cases the release has to survive. Take a hypothetical feature that shows a customer when a returned parcel will be refunded. The release says the refund date appears as soon as the carrier scans the parcel. The FAQ is where that sentence gets checked. Which service computes the date? Has it run on real returns, or only on fixtures? What happens when the scan never arrives? With a status column attached, the sentence becomes stubbed if the calculation exists but returns a fixed value, and untested if nothing has yet run against live returns. The example shows the form and says nothing about any real document. I think the length caps matter for the same reason the status column does. A document short enough to reread is one whose marks get updated.</p>
-<p class="media-note"><strong>Forward build, backward trace</strong> Work starts from the PR/FAQ, the agent builds to it, and each test that runs points back to the claim it checks.</p>
+<figure class="diagram"><svg role="img" aria-label="Forward build, backward trace" viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <g class="step1">
+    <rect x="16" y="50" width="120" height="60" rx="6" class="box hi"/>
+    <text x="76" y="76" text-anchor="middle" class="lbl">PR/FAQ</text>
+    <text x="76" y="96" text-anchor="middle" class="sub">claims, status</text>
+    <path d="M136 80 H176" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step2">
+    <rect x="176" y="50" width="120" height="60" rx="6" class="box"/>
+    <text x="236" y="76" text-anchor="middle" class="lbl">Agent</text>
+    <text x="236" y="96" text-anchor="middle" class="sub">builds to spec</text>
+    <path d="M296 80 H336" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step3">
+    <rect x="336" y="50" width="120" height="60" rx="6" class="box"/>
+    <text x="396" y="76" text-anchor="middle" class="lbl">Code</text>
+    <text x="396" y="96" text-anchor="middle" class="sub">regenerable</text>
+    <path d="M456 80 H496" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step4">
+    <rect x="496" y="50" width="120" height="60" rx="6" class="box good"/>
+    <text x="556" y="76" text-anchor="middle" class="lbl">Tests</text>
+    <text x="556" y="96" text-anchor="middle" class="sub">run per claim</text>
+    <path d="M556 110 V150 H76 V110" class="edge flow" marker-end="url(#arr)"/>
+    <text x="316" y="168" text-anchor="middle" class="sub">each test names the claim it checks</text>
+  </g>
+</svg><figcaption><strong>Forward build, backward trace</strong> Work starts from the PR/FAQ, the agent builds to it, and each test that runs points back to the claim it checks.</figcaption></figure>
 <p>The third proposal is an order of review. Put the spec diff ahead of the code diff in the pull request, and let the reviewer agree on what the change promises before reading how it was built. Code review tends to anchor on whatever the code already does, and an agent in a repository with no stated target infers one from the code it finds. That inference is a bad default when existing behavior is itself a bug. <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic, 2025</a> describes context rot, where recall declines as the window fills, and argues for the smallest set of high-signal tokens that still carries what matters. A spec diff is dense in that sense. <a href="https://arxiv.org/abs/2307.03172">Liu et al., 2023</a> found that performance can degrade significantly when the position of relevant information changes, and that it is often highest at the start or end of the input. I do not know whether the status table belongs at the top for that reason alone. My guess is that a product description first and a table second suits a model reading top down, and I would test that guess before building a process around it.</p>
 <p>The order has a cost. A reviewer who reads the promise first can approve a claim the code cannot keep, and then the code review feels like a formality. That is why the spec diff should carry its status column beside the prose, not just the prose alone.</p>
 <p>The fourth proposal is a guard against Goodhart's law. <a href="https://econbiz.de/Record/problems-of-monetary-management-the-u-k-experience-goodhart-charles/10002525062">Goodhart, 1975</a> observed, in a monetary setting, that a statistical regularity tends to stop being reliable once it is used as a control. A status column is one. When Working is the word everyone wants to see, a green test in simulation starts standing in for the hardware run, and the column drifts toward the answer people hope for. Agents make this worse, because an agent asked to fill a table will make each cell true in the cheapest way available. So each cell should hold an evidence link, not a checkmark. A link to a hardware log with a date and a commit is hard to fake without doing the work. A checkmark is one edit. <a href="https://cognition.com/blog/dont-build-multi-agents">Cognition, 2025</a> argues that agents should share context and full traces, and the same applies here. A spec that each agent meets only as a digest can drift between them, and then the docs become one more silo.</p>

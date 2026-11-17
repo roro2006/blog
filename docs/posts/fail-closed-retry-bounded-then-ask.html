@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Retries are a bet against your checker · All will be Rohan</title>
 <meta name="description" content="The number that decides a product is how often the checker approves a wrong answer after k tries, and escalation should be a budgeted resource.">
-<link rel="stylesheet" href="../style.css?v=text-only">
+<link rel="stylesheet" href="../style.css?v=essay-media">
 </head>
 <body>
 <header class="site">
@@ -22,22 +22,75 @@
 <p>Repeated sampling has a recent literature, and the good news in it is real. <a href="https://arxiv.org/abs/2407.21787">Brown et al., 2024</a> measured coverage, the share of problems that at least one of many samples solves. Coverage grew with the number of samples over four orders of magnitude, and on SWE-bench Lite it rose from 15.9 percent with one sample to 56 percent with 250. The older form of the idea is pass@k from the Codex paper, where <a href="https://arxiv.org/abs/2107.03374">Chen et al., 2021</a> reported 28.8 percent of HumanEval problems solved with one sample and 70.2 percent with 100 samples per problem.</p>
 <p>Both numbers share a blind spot. Coverage is measured against reference answers, and a production pipeline has none. A coverage of 56 percent means a correct attempt exists somewhere among 250. It says nothing about whether the pipeline picks that attempt, or whether it picks a wrong one that a weak check accepted. Pass@k assumes the judge is right, and each added sample gives an imperfect judge one more chance to be wrong.</p>
 <p>The arithmetic makes this concrete, using a checker I have invented for the purpose. Suppose it wrongly passes one bad candidate in a hundred, and that failures are independent from one candidate to the next. Across 10 candidates, the chance that at least one bad candidate gets through is about 10 percent. Across 100 it is about 63 percent. The retry budget is therefore also a budget for false approvals, and the checker's error rate decides how many retries are safe. By the same arithmetic, a checker that passes one in a thousand can afford roughly ten times as many candidates for the same risk. A checker that passes one in ten should not retry at all, because two candidates already give it a 19 percent chance of a false approval.</p>
-<table class="data-table"><caption>Chance a bad candidate slips through, 1-in-100 checker</caption><tbody><tr><th scope="row">1 candidate</th><td>1%</td></tr><tr><th scope="row">10 candidates</th><td>9.6%</td></tr><tr><th scope="row">50 candidates</th><td>39.5%</td></tr><tr><th scope="row">100 candidates</th><td>63.4%</td></tr></tbody></table><p class="media-note">Assumes independent failures. Not a measurement of the real pipeline. Source: Derived: 1 - 0.99^n, for the hypothetical checker above</p>
+<figure class="chart"><svg viewBox="0 0 640 144" role="img" aria-label="Chance a bad candidate slips through, 1-in-100 checker"><text x="220" y="24" text-anchor="end" class="cl">1 candidate</text><rect x="230.0" y="10" width="4.4" height="20" rx="3" class="cb"/><text x="242.4" y="24" class="cv">1%</text><text x="220" y="58" text-anchor="end" class="cl">10 candidates</text><rect x="230.0" y="44" width="42.4" height="20" rx="3" class="cb"/><text x="280.4" y="58" class="cv">9.6%</text><text x="220" y="92" text-anchor="end" class="cl">50 candidates</text><rect x="230.0" y="78" width="174.4" height="20" rx="3" class="cb"/><text x="412.4" y="92" class="cv">39.5%</text><text x="220" y="126" text-anchor="end" class="cl">100 candidates</text><rect x="230.0" y="112" width="280.0" height="20" rx="3" class="cb"/><text x="518.0" y="126" class="cv">63.4%</text></svg><figcaption><strong>Chance a bad candidate slips through, 1-in-100 checker</strong> Assumes independent failures. Not a measurement of the real pipeline.<span class="src">Source: Derived: 1 - 0.99^n, for the hypothetical checker above</span></figcaption></figure>
 <p>The clearest public case I know is a coding agent that samples patches for a GitHub issue and keeps the ones that pass the repository's tests. <a href="https://arxiv.org/abs/2310.06770">Jimenez et al., 2023</a> built SWE-bench from 2,294 problems drawn from real GitHub issues across 12 Python repositories, and the benchmark scores a patch by running its tests. Take that loop into production and the tests become the checker, which makes the checker's failure modes the first thing to design.</p>
 <p>A patch that crashes the test runner, times out, or fails to apply has to be recorded as a failure, since a missing answer would hide it. A broken harness then can only shrink the set of accepted patches. If errors were read as passes, the harness would approve most often on the hard cases, which are the cases most likely to break it.</p>
 <p>The first proposal is to set the retry budget from the checker's measured false-pass rate. Most retry limits I have seen are a number chosen for cost, perhaps five attempts because five felt reasonable. I would derive the budget from the arithmetic above, so a team can say which risk it accepts and what that risk costs. The consequence is that a weaker checker earns fewer retries, and a stronger one can earn more. That sounds backwards to anyone who thinks of retries as a way to rescue a weak filter, and it is the reason the rule matters. A retry on a weak checker mostly buys more false approvals.</p>
-<p class="media-note"><strong>Generate, check, retry, then escalate</strong> The loop approves a candidate that passes, retries a failure up to a fixed limit, and then hands the closest candidate to a person.</p>
+<figure class="diagram"><svg role="img" aria-label="Generate, check, retry, then escalate" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+  <g class="step1">
+    <rect x="16" y="30" width="150" height="70" rx="6" class="box"/>
+    <text x="91" y="58" text-anchor="middle" class="lbl">Generate</text>
+    <text x="91" y="78" text-anchor="middle" class="sub">one candidate</text>
+    <path d="M166 65 H226" class="edge" marker-end="url(#arr)"/>
+  </g>
+  <g class="step2">
+    <rect x="226" y="30" width="150" height="70" rx="6" class="box hi"/>
+    <text x="301" y="58" text-anchor="middle" class="lbl">Checker</text>
+    <text x="301" y="78" text-anchor="middle" class="sub">tests or judge</text>
+    <path d="M376 65 H436" class="edge good" marker-end="url(#arr)"/>
+    <text x="406" y="56" text-anchor="middle" class="sub">pass</text>
+    <path d="M301 100 V150" class="edge bad" marker-end="url(#arr)"/>
+    <text x="311" y="130" class="sub">fail</text>
+  </g>
+  <g class="step3">
+    <rect x="436" y="30" width="150" height="70" rx="6" class="box good"/>
+    <text x="511" y="58" text-anchor="middle" class="lbl">Approve</text>
+    <text x="511" y="78" text-anchor="middle" class="sub">result ships</text>
+  </g>
+  <g class="step4">
+    <rect x="226" y="150" width="150" height="70" rx="6" class="box"/>
+    <text x="301" y="176" text-anchor="middle" class="lbl">Retry</text>
+    <text x="301" y="196" text-anchor="middle" class="sub">attempt k of N</text>
+    <path d="M226 185 H91 V100" class="edge" marker-end="url(#arr)"/>
+    <text x="150" y="178" class="sub">retry</text>
+    <path d="M376 185 H436" class="edge bad" marker-end="url(#arr)"/>
+    <text x="406" y="178" text-anchor="middle" class="sub">after N</text>
+    <rect x="436" y="150" width="150" height="70" rx="6" class="box hi"/>
+    <text x="511" y="176" text-anchor="middle" class="lbl">Escalate</text>
+    <text x="511" y="196" text-anchor="middle" class="sub">closest candidate</text>
+    <text x="511" y="212" text-anchor="middle" class="sub">and failed checks</text>
+  </g>
+</svg><figcaption><strong>Generate, check, retry, then escalate</strong> The loop approves a candidate that passes, retries a failure up to a fixed limit, and then hands the closest candidate to a person.</figcaption></figure>
 <p>The objection deserves a real hearing. A checker with a very low false-pass rate can afford a generous budget, and some tasks are only solved late in the sample sequence, as the coverage curve shows. I would still set the number from the checker, and let a low solve rate argue for a better checker instead of a bigger budget.</p>
 <p>Where no test suite exists, teams fall back on an LLM judge that reads the output and decides whether it is right. <a href="https://arxiv.org/abs/2306.05685">Zheng et al., 2023</a> found that GPT-4 agreed with human preference in over 80 percent of comparisons, the same level of agreement humans reached with each other. The same paper examines position, verbosity and self-enhancement biases, along with limited reasoning ability. I would expect those biases to matter more inside a retry loop. If the judge favors longer answers, the generator drifts toward longer answers, and each retry gives the biased judge another draw at the same preference.</p>
 <p>Fail-closed handles part of the judge problem. A judge that errors, times out, or returns a malformed verdict should count as a rejection, and that is the easy case. It does nothing about a judge that answers confidently and is wrong. For high-stakes outputs I would not let the judge be the only gate, and I would require a deterministic check wherever one exists.</p>
 <p>Passing a gate and being right are different properties. <a href="https://arxiv.org/abs/2605.26128">Ray, 2026</a> measured small models, all under 3 billion parameters, under hard schema decoding against a baseline. Schema validity rose from 61.5 percent to 100 percent, while answer accuracy fell from 19.7 percent to 11.0 percent. The share of outputs that were valid but wrong rose from 49.5 percent to 88.9 percent. A pipeline that counted validity as success would have reported improvement on its gate metric while the answers got worse.</p>
 <p>The second proposal is to publish three service levels for any agent loop together: the false-approve rate, the escalation rate, and the cost per approved result. Each one can be gamed alone. A loop can drive false approvals to zero by escalating everything, and it can drive escalations to zero by lowering the checker's bar. Cost per approved result shows what either move costs. Measuring false approvals needs labeled examples, and labels are expensive, so most teams will estimate the rate from a small sample with wide error bars. I would publish the interval with the point estimate. A rate of zero from twenty labels tells a reader very little, and a reader who sees only the point will trust it more than it deserves.</p>
-<p class="media-note"><strong>Three service levels, each with a lever</strong> Each service level can be gamed alone, so the three are published together with the lever that moves each one.</p>
+<figure class="diagram"><svg role="img" aria-label="Three service levels, each with a lever" viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg">
+  <rect x="16" y="30" width="188" height="120" rx="6" class="box"/>
+  <text x="110" y="58" text-anchor="middle" class="lbl">False approvals</text>
+  <text x="110" y="78" text-anchor="middle" class="sub">bad answers that pass</text>
+  <text x="110" y="104" text-anchor="middle" class="sub">moves with</text>
+  <rect x="28" y="110" width="164" height="30" rx="6" class="box hi"/>
+  <text x="110" y="130" text-anchor="middle" class="sub">checker, retry budget</text>
+  <rect x="226" y="30" width="188" height="120" rx="6" class="box"/>
+  <text x="320" y="58" text-anchor="middle" class="lbl">Escalation rate</text>
+  <text x="320" y="78" text-anchor="middle" class="sub">share sent to a person</text>
+  <text x="320" y="104" text-anchor="middle" class="sub">moves with</text>
+  <rect x="238" y="110" width="164" height="30" rx="6" class="box hi"/>
+  <text x="320" y="130" text-anchor="middle" class="sub">checker strictness</text>
+  <rect x="436" y="30" width="188" height="120" rx="6" class="box"/>
+  <text x="530" y="58" text-anchor="middle" class="lbl">Cost per approval</text>
+  <text x="530" y="78" text-anchor="middle" class="sub">spend per accepted answer</text>
+  <text x="530" y="104" text-anchor="middle" class="sub">moves with</text>
+  <rect x="448" y="110" width="164" height="30" rx="6" class="box hi"/>
+  <text x="530" y="130" text-anchor="middle" class="sub">samples and retries</text>
+</svg><figcaption><strong>Three service levels, each with a lever</strong> Each service level can be gamed alone, so the three are published together with the lever that moves each one.</figcaption></figure>
 <p>Process reward models push the same logic into the middle of a reasoning chain. <a href="https://arxiv.org/abs/2305.20050">Lightman et al., 2023</a> trained a process-supervised model that solves 78 percent of a representative subset of MATH test problems, and released PRM800K, a set of 800,000 step-level human labels. The labels are the part of the method that teams tend to leave out of the budget. A verifier at that grain is a dataset project before it is a model project.</p>
 <p>The third proposal treats the escalation queue as product surface. Most designs treat escalation as a fallback, a list that receives whatever the loop gave up on. I would hand the person the closest candidate, the checks it failed, and the reason each one failed. A reviewer who sees that can resolve an item in minutes instead of re-deriving the problem. Every entry costs a person's attention, so a loop that escalates too often teaches its reviewers to click approve, and that failure is the one I worry about most.</p>
 <p>The reviewer also has to fail differently from the checker. <a href="https://arxiv.org/abs/2303.17651">Madaan et al., 2023</a> report an improvement of about 20 percent absolute, on average, when a model critiques and revises its own outputs. The gain is real in the paper. In that loop the critic is the generator, so the checker shares its blind spots and every retry repeats them. A second model from the same family is a weak choice for the reviewer role for the same reason.</p>
 <p>I would put the queue on the same dashboard as the three service levels and check it first each morning. An empty queue on a loop that handles hard inputs is a reason to doubt the checker before praising the agent. Sampling is cheap. Trust is the budget, and it is spent every time a wrong answer passes.</p>
-<p class="media-note"><a href="https://www.youtube.com/watch?v=DrLdvbkgmeA">John Yang: SWE-bench, Can Language Models Resolve Real-World GitHub Issues?</a> The SWE-bench lead author on how tasks are built from real issues and scored by the repository's own tests, which is the checker this essay leans on.</p>
+<figure class="video"><div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/DrLdvbkgmeA" title="John Yang: SWE-bench, Can Language Models Resolve Real-World GitHub Issues?" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe></div><figcaption><strong>John Yang: SWE-bench, Can Language Models Resolve Real-World GitHub Issues?</strong> The SWE-bench lead author on how tasks are built from real issues and scored by the repository's own tests, which is the checker this essay leans on.</figcaption></figure>
 <h2>References</h2>
 <ol><li>Brown, B. et al. (2024). Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv. <a href="https://arxiv.org/abs/2407.21787">https://arxiv.org/abs/2407.21787</a></li><li>Chen, M. et al. (2021). Evaluating Large Language Models Trained on Code. arXiv. <a href="https://arxiv.org/abs/2107.03374">https://arxiv.org/abs/2107.03374</a></li><li>Jimenez, C. E. et al. (2023). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? arXiv. <a href="https://arxiv.org/abs/2310.06770">https://arxiv.org/abs/2310.06770</a></li><li>Lightman, H. et al. (2023). Let's Verify Step by Step. arXiv. <a href="https://arxiv.org/abs/2305.20050">https://arxiv.org/abs/2305.20050</a></li><li>Madaan, A. et al. (2023). Self-Refine: Iterative Refinement with Self-Feedback. arXiv. <a href="https://arxiv.org/abs/2303.17651">https://arxiv.org/abs/2303.17651</a></li><li>Ray, J. (2026). The Constraint Tax: Measuring Validity-Correctness Tradeoffs in Structured Outputs for Small Language Models. arXiv. <a href="https://arxiv.org/abs/2605.26128">https://arxiv.org/abs/2605.26128</a></li><li>Zheng, L. et al. (2023). Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. arXiv. <a href="https://arxiv.org/abs/2306.05685">https://arxiv.org/abs/2306.05685</a></li></ol>
 </div>
