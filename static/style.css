@@ -1,25 +1,25 @@
 :root {
-  /* lighter forest: morning mist, pine shadow, fern and bark */
-  --bg: #f1f5ee;
-  --fg: #1e2d24;
-  --muted: #5b6e61;
-  --rule: #d3ded0;
-  --accent: #2f6b4a;
-  --moss: #8aa874;
-  --pine: #3f7a58;
-  --code-bg: #e4ece0;
+  color-scheme: light dark;
+  --bg: #efeee1;
+  --fg: #22291a;
+  --muted: #505a43;
+  --rule: #c7c7ac;
+  --accent: #355836;
+  --moss: #7f955c;
+  --copper: #80502e;
+  --code-bg: #e3e6d3;
   --measure: 40rem;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1d2822;
-    --fg: #e6ede3;
-    --muted: #a3b4a7;
-    --rule: #33443a;
-    --accent: #93cba4;
-    --moss: #4f6b4c;
-    --pine: #3b5a46;
-    --code-bg: #25332b;
+    --bg: #12170d;
+    --fg: #ece9d6;
+    --muted: #abb79a;
+    --rule: #3d472e;
+    --accent: #b4d68a;
+    --moss: #576b3a;
+    --copper: #d09955;
+    --code-bg: #222a19;
   }
 }
 * { box-sizing: border-box; }
@@ -37,7 +37,10 @@ header.site {
   padding-top: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--rule);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px;
 }
-header.site .name { color: var(--fg); font-weight: 600; text-decoration: none; }
+header.site .name {
+  color: var(--fg); font: 700 1.2rem Georgia, serif; text-decoration: none;
+}
+header.site .name:hover { color: var(--accent); }
 header.site nav { display: flex; gap: 18px; }
 header.site nav a { color: var(--muted); text-decoration: none; }
 header.site nav a:hover { color: var(--fg); }
@@ -54,7 +57,8 @@ footer.site a { color: var(--muted); }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .filters button {
   font: 13px system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--muted);
-  background: none; border: 1px solid var(--rule); border-radius: 999px; padding: 4px 12px; cursor: pointer;
+  background: var(--code-bg); border: 1px solid var(--rule); border-radius: 2px;
+  padding: 5px 12px; cursor: pointer;
 }
 .filters button.on, .filters button:hover { color: var(--fg); border-color: var(--fg); }
 
@@ -157,15 +161,19 @@ figure.diagram .src, figure.video .src { display: block; margin-top: 4px; font-s
   figure.diagram figcaption { position: sticky; left: 0; max-width: calc(100vw - 66px); }
 }
 
-/* forest touches */
-.treeline { display: block; width: 100%; height: 46px; margin: 0; }
-.treeline .far { fill: var(--moss); opacity: .35; }
-.treeline .near { fill: var(--pine); opacity: .55; }
-header.site { border-bottom-color: transparent; }
+/* The Tangle: copper trunks, verdigris foliage, and a dark forest floor. */
+.treeline {
+  height: clamp(92px, 15vw, 170px);
+  background: #12170d url("mirrodin-tangle.png") repeat-x center bottom / auto 100%;
+  image-rendering: pixelated;
+  border-bottom: 2px solid var(--copper);
+}
+.intro { border-left: 3px solid var(--copper); padding-left: 14px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
 a:hover { text-decoration-color: var(--accent); }
 .posts li { border-top-color: var(--rule); }
-.posts .num { color: var(--pine); }
+.posts .num { color: var(--copper); }
 .filters button.on, .filters button:hover { color: var(--bg); background: var(--accent); border-color: var(--accent); }
 .prose blockquote { border-left-color: var(--moss); }
 figure.chart, figure.diagram { background: color-mix(in srgb, var(--box, #fff) 70%, transparent); }
