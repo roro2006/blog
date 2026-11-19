@@ -159,17 +159,31 @@ def diagram(block):
     svg = re.sub(r"<svg\b", '<svg role="img" aria-label="' + html.escape(meta.get("title", "diagram")) + '"', svg, count=1)
     if "url(#arr)" in svg and "<defs>" not in svg:
         svg = re.sub(r"(<svg[^>]*>)", r"\1" + ARROW_DEFS, svg, count=1)
-    return f'<figure class="diagram">{svg}{_caption(meta)}</figure>'
+    cls = "diagram manim" if meta.get("style", "").lower() == "manim" else "diagram"
+    return f'<figure class="{cls}">{svg}{_caption(meta)}</figure>'
+
+
+def image(block):
+    """```image block: src: file in static/img, alt:, title:, caption:, source:"""
+    meta, _ = _meta_and_rest(block, "\x00")
+    src = meta.get("src", "")
+    if not re.fullmatch(r"[\w.-]+\.(jpg|jpeg|png|webp)", src):
+        return ""
+    alt = html.escape(meta.get("alt", meta.get("title", "")))
+    return (f'<figure class="image"><img src="../img/{src}" alt="{alt}" loading="lazy" decoding="async">'
+            f'{_caption(meta)}</figure>')
 
 
 def video(block):
-    """```video block: youtube: ID, title:, caption:"""
+    """```video block: youtube: ID, start: seconds (optional), title:, caption:"""
     meta, _ = _meta_and_rest(block, "\x00")
     vid = meta.get("youtube", "")
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", vid):
         return ""
+    start = meta.get("start", "")
+    query = f"?start={int(start)}" if start.isdigit() else ""
     title = html.escape(meta.get("title", "Video"))
-    frame = (f'<div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/{vid}" title="{title}" '
+    frame = (f'<div class="vwrap"><iframe src="https://www.youtube-nocookie.com/embed/{vid}{query}" title="{title}" '
              'loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" '
              'allowfullscreen></iframe></div>')
     return f'<figure class="video">{frame}{_caption(meta)}</figure>'
@@ -200,6 +214,8 @@ def markdown(src):
                 out.append(diagram(block))
             elif lang == "video":
                 out.append(video(block))
+            elif lang == "image":
+                out.append(image(block))
             else:
                 out.append("<pre><code>" + html.escape("\n".join(block)) + "</code></pre>")
         elif re.match(r"(\d+\.|[-*])\s+", line):
@@ -262,6 +278,20 @@ def parse(path):
 
 # ---------- templates ----------
 
+# Manim-style figures start hidden only when this script runs, then draw in once on screen.
+MANIM_JS = """<script>
+(function () {
+  var figs = document.querySelectorAll('figure.manim');
+  if (!figs.length) return;
+  document.documentElement.classList.add('mjs');
+  if (!('IntersectionObserver' in window)) { figs.forEach(function (f) { f.classList.add('play'); }); return; }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('play'); io.unobserve(e.target); } });
+  }, { threshold: 0.35 });
+  figs.forEach(function (f) { io.observe(f); });
+})();
+</script>"""
+
 def page(title, body, depth=0, description=""):
     up = "../" * depth
     desc = html.escape(description or SITE["tagline"])
@@ -272,7 +302,7 @@ def page(title, body, depth=0, description=""):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{desc}">
-<link rel="stylesheet" href="{up}style.css?v=essay-media">
+<link rel="stylesheet" href="{up}style.css?v=manim-1">
 </head>
 <body>
 <header class="site">
@@ -285,6 +315,7 @@ def page(title, body, depth=0, description=""):
 <footer class="site">
   <span>{SITE["author"]} · <a href="{SITE["github"]}">github.com/roro2006</a></span>
 </footer>
+{MANIM_JS}
 </body>
 </html>
 """
@@ -308,6 +339,8 @@ def build():
             shutil.rmtree(f, ignore_errors=True)
     (OUT / "posts").mkdir(exist_ok=True)
     shutil.copy(STATIC / "style.css", OUT / "style.css")
+    if (STATIC / "img").is_dir():
+        shutil.copytree(STATIC / "img", OUT / "img", dirs_exist_ok=True)
     (OUT / ".nojekyll").write_text("")
 
     posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)

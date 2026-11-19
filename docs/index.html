@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>All will be Rohan</title>
 <meta name="description" content="Notes from the Hunter Maze">
-<link rel="stylesheet" href="style.css?v=essay-media">
+<link rel="stylesheet" href="style.css?v=manim-1">
 </head>
 <body>
 <header class="site">
@@ -19,6 +19,11 @@
 </section>
 <div class="filters"><button class="on" data-tag="" onclick="filterPosts(this)">all</button><button data-tag="agents" onclick="filterPosts(this)">agents</button><button data-tag="hardware" onclick="filterPosts(this)">hardware</button><button data-tag="inference" onclick="filterPosts(this)">inference</button><button data-tag="verification" onclick="filterPosts(this)">verification</button><button data-tag="workflow" onclick="filterPosts(this)">workflow</button></div>
 <ol class="posts">
+<li data-tags="agents verification">
+  <a href="posts/ezreal-has-no-flash.html"><span class="num">14</span><span class="t">Ezreal has no Flash</span></a>
+  <p>The voice comms that won the 2026 League of Legends World Championship are a heap of banalities, and their banality is the most useful thing in them for anyone building agents that talk to each other.</p>
+  <p class="meta">Nov 19, 2026 · <span class="kind">essay</span> · 27 min · <span class="tag">agents</span><span class="tag">verification</span></p>
+</li>
 <li data-tags="agents workflow">
   <a href="posts/elephants-and-goldfish.html"><span class="num">13</span><span class="t">In multi-agent systems, the brief is the unit of engineering</span></a>
   <p>Engineer multi-agent work as reviewable briefs for stateless workers, because a brief can be checked and a shared memory cannot.</p>
@@ -97,5 +102,17 @@ function filterPosts(b) {
 <footer class="site">
   <span>Rohan Reddy · <a href="https://github.com/roro2006">github.com/roro2006</a></span>
 </footer>
+<script>
+(function () {
+  var figs = document.querySelectorAll('figure.manim');
+  if (!figs.length) return;
+  document.documentElement.classList.add('mjs');
+  if (!('IntersectionObserver' in window)) { figs.forEach(function (f) { f.classList.add('play'); }); return; }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('play'); io.unobserve(e.target); } });
+  }, { threshold: 0.35 });
+  figs.forEach(function (f) { io.observe(f); });
+})();
+</script>
 </body>
 </html>

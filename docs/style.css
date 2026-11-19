@@ -119,7 +119,11 @@ figure.chart .axis { stroke: var(--muted); stroke-width: 1; }
 /* diagrams */
 :root { --box: #f9fbf6; --box-hi: #dcebdd; --good: #3f7a3a; --bad: #a8642a; }
 @media (prefers-color-scheme: dark) { :root { --box: #23302a; --box-hi: #2d463a; --good: #a9d08f; --bad: #e2ab6c; } }
-figure.diagram, figure.video { margin: 1.8em 0; }
+figure.diagram, figure.video, figure.image { margin: 1.8em 0; }
+figure.image img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule); }
+figure.image figcaption { margin-top: 10px; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--muted); }
+figure.image figcaption strong { color: var(--fg); font-weight: 600; }
+figure.image .src { display: block; margin-top: 4px; font-size: 12.5px; }
 figure.diagram { padding: 16px 16px 12px; border: 1px solid var(--rule); border-radius: 8px; }
 figure.diagram svg { width: 100%; height: auto; display: block; overflow: visible; }
 figure.diagram figcaption, figure.video figcaption {
@@ -171,3 +175,59 @@ a:hover { text-decoration-color: var(--accent); }
 .prose blockquote { border-left-color: var(--moss); }
 figure.chart, figure.diagram { background: color-mix(in srgb, var(--box, #fff) 70%, transparent); }
 ::selection { background: color-mix(in srgb, var(--moss) 45%, transparent); }
+
+/* manim-style figures (a 3Blue1Brown-like stage): dark ground, five accents, serif math labels,
+   shapes that draw in once when the figure scrolls into view. Opt in with "style: manim". */
+figure.manim {
+  --m-bg: #15171c; --m-line: #2b2f37; --m-fg: #ece8df; --m-muted: #8d94a1;
+  --m-blue: #58c4dd; --m-yellow: #f4d35e; --m-green: #83c167; --m-red: #fc6255; --m-teal: #5cd0b3;
+  background: var(--m-bg); border-color: var(--m-line); padding: 22px 20px 14px;
+}
+figure.manim figcaption { color: var(--m-muted); }
+figure.manim figcaption strong { color: var(--m-fg); }
+figure.manim figcaption a { color: var(--m-blue); }
+.manim text, .manim .lbl, .manim .sub, .manim .num { font-family: "CMU Serif", "Latin Modern Roman", "Computer Modern Serif", Georgia, "Times New Roman", serif; }
+.manim .lbl { fill: var(--m-fg); font-size: 15px; font-weight: 400; }
+.manim .sub { fill: var(--m-muted); font-size: 13px; font-style: italic; }
+.manim .num { fill: var(--m-fg); font-size: 14px; font-weight: 400; }
+.manim .edge { stroke: var(--m-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; }
+.manim .node { fill: var(--m-bg); stroke: var(--m-muted); stroke-width: 2; }
+.manim .ah { fill: var(--m-muted); }
+.manim .w3 { stroke-width: 3; } .manim .w4 { stroke-width: 4; }
+.manim .dash { stroke-dasharray: 4 5; }
+.manim .faint { opacity: .35; }
+.manim .c-blue { stroke: var(--m-blue); } .manim .c-yellow { stroke: var(--m-yellow); }
+.manim .c-green { stroke: var(--m-green); } .manim .c-red { stroke: var(--m-red); }
+.manim .c-teal { stroke: var(--m-teal); } .manim .c-muted { stroke: var(--m-muted); } .manim .c-fg { stroke: var(--m-fg); }
+.manim .f-blue { fill: var(--m-blue); } .manim .f-yellow { fill: var(--m-yellow); }
+.manim .f-green { fill: var(--m-green); } .manim .f-red { fill: var(--m-red); }
+.manim .f-teal { fill: var(--m-teal); } .manim .f-muted { fill: var(--m-muted); }
+.manim .t-blue { fill: var(--m-blue); } .manim .t-yellow { fill: var(--m-yellow); }
+.manim .t-green { fill: var(--m-green); } .manim .t-red { fill: var(--m-red); }
+.manim .t-teal { fill: var(--m-teal); } .manim .t-muted { fill: var(--m-muted); }
+/* reveal: initial states apply only when the script is running (html.mjs) */
+.mjs .manim .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.mjs .manim .fade { opacity: 0; }
+.mjs .manim .grow { transform: scaleX(0); }
+.mjs .manim .growy { transform: scaleY(0); }
+.manim .grow { transform-box: fill-box; transform-origin: left center; }
+.manim .growy { transform-box: fill-box; transform-origin: center bottom; }
+.mjs .manim.play .draw { animation: m-draw 1.1s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mjs .manim.play .fade { animation: m-fade .6s ease forwards; }
+.mjs .manim.play .grow { animation: m-grow .9s cubic-bezier(.2, .8, .2, 1) forwards; }
+.mjs .manim.play .growy { animation: m-growy .9s cubic-bezier(.2, .8, .2, 1) forwards; }
+.manim .d1 { animation-delay: .2s !important; } .manim .d2 { animation-delay: .45s !important; }
+.manim .d3 { animation-delay: .7s !important; } .manim .d4 { animation-delay: .95s !important; }
+.manim .d5 { animation-delay: 1.2s !important; } .manim .d6 { animation-delay: 1.5s !important; }
+.manim .d7 { animation-delay: 1.8s !important; } .manim .d8 { animation-delay: 2.1s !important; }
+.manim .d9 { animation-delay: 2.4s !important; } .manim .d10 { animation-delay: 2.7s !important; }
+.manim .d11 { animation-delay: 3s !important; } .manim .d12 { animation-delay: 3.3s !important; }
+@keyframes m-draw { to { stroke-dashoffset: 0; } }
+@keyframes m-fade { to { opacity: 1; } }
+@keyframes m-grow { to { transform: scaleX(1); } }
+@keyframes m-growy { to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .mjs .manim .draw { stroke-dashoffset: 0; } .mjs .manim .fade { opacity: 1; }
+  .mjs .manim .grow, .mjs .manim .growy { transform: none; }
+  .mjs .manim.play * { animation: none !important; }
+}
