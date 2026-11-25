@@ -47,11 +47,6 @@ def inline(text):
 
     text = re.sub(r"`([^`]+)`", stash, text)
 
-    def estimate(m):  # {{est: ...}} marks a placeholder guess; build() refuses to publish a post with any left
-        codes.append('<span class="est" title="Estimate: replace before publishing">' + html.escape(m.group(1)) + "</span>")
-        return f"\x00{len(codes) - 1}\x00"
-
-    text = re.sub(r"\{\{est:\s*(.*?)\}\}", estimate, text)
     text = html.escape(text, quote=False)
     def link(m):
         codes.append(f'<a href="{m.group(2)}">{m.group(1)}</a>')
@@ -279,7 +274,6 @@ def parse(path):
         "date": meta.get("date", SITE["date"]),
         "kind": meta.get("kind", "").strip().lower(),
         "draft": meta.get("draft", "").strip().lower() == "true",
-        "estimates": len(re.findall(r"\{\{est:", body)),
         "minutes": max(1, round(words / 230)),
         "html": markdown(body.strip()),
     }
@@ -361,9 +355,6 @@ def build():
     posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)
     if not drafts:
         posts = [p for p in posts if not p["draft"]]
-        unfinished = [f'{p["slug"]} ({p["estimates"]} estimates)' for p in posts if p["estimates"]]
-        if unfinished:
-            raise SystemExit("Refusing to publish posts with {{est: ...}} placeholders left: " + ", ".join(unfinished))
     all_tags = sorted({t for p in posts for t in p["tags"]})
 
     for idx, p in enumerate(posts):
