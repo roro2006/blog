@@ -13,6 +13,7 @@ No dependencies. Posts live in posts/*.md with a small front-matter block:
 import html
 import re
 import shutil
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -45,6 +46,12 @@ def inline(text):
         return f"\x00{len(codes) - 1}\x00"
 
     text = re.sub(r"`([^`]+)`", stash, text)
+
+    def estimate(m):  # {{est: ...}} marks a placeholder guess; build() refuses to publish a post with any left
+        codes.append('<span class="est" title="Estimate: replace before publishing">' + html.escape(m.group(1)) + "</span>")
+        return f"\x00{len(codes) - 1}\x00"
+
+    text = re.sub(r"\{\{est:\s*(.*?)\}\}", estimate, text)
     text = html.escape(text, quote=False)
     def link(m):
         codes.append(f'<a href="{m.group(2)}">{m.group(1)}</a>')
@@ -271,6 +278,8 @@ def parse(path):
         "tags": [t.strip() for t in meta.get("tags", "").split(",") if t.strip()],
         "date": meta.get("date", SITE["date"]),
         "kind": meta.get("kind", "").strip().lower(),
+        "draft": meta.get("draft", "").strip().lower() == "true",
+        "estimates": len(re.findall(r"\{\{est:", body)),
         "minutes": max(1, round(words / 230)),
         "html": markdown(body.strip()),
     }
@@ -330,6 +339,12 @@ def tag_list(tags):
 
 
 def build():
+    # Posts with "draft: true" are left out of docs/ (the published site). "python build.py --drafts"
+    # builds everything into preview/ instead, which is git-ignored, so a draft can't go live by accident.
+    global OUT
+    drafts = "--drafts" in sys.argv
+    if drafts:
+        OUT = ROOT / "preview"
     OUT.mkdir(exist_ok=True)
     # Empty in place: a preview server or shell may hold these folders open.
     for f in sorted(OUT.rglob("*"), reverse=True):
@@ -344,6 +359,11 @@ def build():
     (OUT / ".nojekyll").write_text("")
 
     posts = sorted((parse(p) for p in POSTS.glob("*.md")), key=lambda p: p["date"], reverse=True)
+    if not drafts:
+        posts = [p for p in posts if not p["draft"]]
+        unfinished = [f'{p["slug"]} ({p["estimates"]} estimates)' for p in posts if p["estimates"]]
+        if unfinished:
+            raise SystemExit("Refusing to publish posts with {{est: ...}} placeholders left: " + ", ".join(unfinished))
     all_tags = sorted({t for p in posts for t in p["tags"]})
 
     for idx, p in enumerate(posts):

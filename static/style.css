@@ -231,3 +231,6 @@ figure.manim figcaption a { color: var(--m-blue); }
   .mjs .manim .grow, .mjs .manim .growy { transform: none; }
   .mjs .manim.play * { animation: none !important; }
 }
+
+/* {{est: ...}} placeholder guesses, visible only in draft previews */
+.est { background: color-mix(in srgb, var(--accent) 14%, transparent); text-decoration: underline dotted var(--accent); text-underline-offset: 3px; border-radius: 3px; padding: 0 2px; }
